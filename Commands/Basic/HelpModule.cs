@@ -1,21 +1,21 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Silicon.Modules.Commons;
+using Silicon.Commands.Commons;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Silicon.Commands.Modules
+namespace Silicon.Commands.Basic
 {
     [Name("help")]
-    [BotChannelsOnly]
+    [Ratelimit(5, 10)]
     public class HelpModule : PandoraModule
     {
-        public CommandService Commands { get; }
-        public IServiceProvider Services { get; }
+        public CommandService Commands { get; set; }
+        public IServiceProvider Services { get; set; }
 
         [Command("guildinfo")]
         [Summary("Gets info on the server.")]
@@ -51,47 +51,26 @@ namespace Silicon.Commands.Modules
             await ReplyAsync(builder.Build());
         }
 
+        private static List<string> modules;
+
         [Command("help")]
-        [Summary("Path will be divided into modules and sub-modules.\n" +
-            "Admin commands can be found (not used) via a private/group DM.")]
-        public async Task Help([Remainder] string path = null)
+        [Summary("Admin commands can be found (not used) via a private/group DM.")]
+        public async Task Help()
         {
-            if (path.IsNullOrWhitespace())
+            if (modules == null)
             {
-                var list = new List<string>();
+                modules = new List<string>();
                 foreach (var mod in Commands.Modules.Where(m => m.Parent == null))
                 {
-                    describeModule(mod, ref list);
+                    describeModule(mod, ref modules);
                 }
-                await Interactive.SendPaginatedMessageAsync(Context,
-                    new Models.PaginatedOptions("Modules", new Color(0xff0066), list));
             }
-            else
-            {
-                EmbedBuilder builder = new EmbedBuilder().WithTitle("Modules")
-                    .WithColor(new Color(0xff0066))
-                    .WithFooter("Exclude `path` parameter to see all commands.");
-
-                ModuleInfo result = null;
-                var arr = path.Replace('.', ' ').Replace('/', ' ').Split(' ');
-                foreach (var mod in Commands.Modules.Where(m => m.Parent == null))
-                {
-                    int index = 0;
-                    if (TryFindModule(mod, arr, ref index, out result)) break;
-                }
-                if (result == null) { await ReplyAsync("No module could be found with that name."); return; }
-
-                builder.Title = result.ModuleName();
-                builder.Description = aliases(result) +
-                    GetSubmodules(result);
-                GetCommands(result, ref builder);
-
-                await ReplyAsync(builder.Build());
-            }
+            await Interactive.SendPaginatedMessageAsync(Context,
+                new Models.PaginatedOptions("Modules", new Color(0xff0066), modules));
 
             static string aliases(ModuleInfo module)
             {
-                return module.Aliases.Any()
+                return !module.Aliases.First().IsNullOrWhitespace()
                     ? $"Prefix{(module.Aliases.Count() > 1 ? "es" : "")}: {string.Join(",", module.Aliases)}\n"
                     : "";
             }
@@ -102,7 +81,7 @@ namespace Silicon.Commands.Modules
                 var commands = QualifiedCommands(module);
                 if (commands.Count > 0)
                 {
-                    builder.AppendLine(module.ModuleName().Bold());
+                    builder.AppendLine(module.ModuleName().ToUpper().Bold());
                     builder.AppendLine(aliases(module) + GetSubmodules(module));
                     foreach (var command in commands)
                     {
@@ -143,7 +122,7 @@ namespace Silicon.Commands.Modules
             var submodules = module.Submodules.Where(x => QualifiedCommands(x).Count() > 0);
             return module.Submodules.Any()
                 ? $"Submodule{(module.Submodules.Count() > 1 ? "s" : "")}: " +
-                $"{string.Join(", ", module.Submodules.Select(m => m.ModuleName()))}\n"
+                $"{string.Join(", ", module.Submodules.Select(m => m.ModuleName().ToUpper()))}\n"
                 : "";
         }
 

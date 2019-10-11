@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
 using System;
 using System.Collections.Specialized;
@@ -55,7 +54,6 @@ namespace Silicon.Services
         public TextCrunchService(DiscordSocketClient client)
         {
             _client = client;
-            _client.MessageReceived += HandleText;
             site = ChooseSite();
             offlineCheck = new Timer(_ => OfflineCheck(), null,
                 TimeSpan.FromDays(1), TimeSpan.FromDays(1));
@@ -74,28 +72,13 @@ namespace Silicon.Services
             return (site = this.site) != null;
         }
 
-        private async Task HandleText(SocketMessage socketMessage)
+        public async Task<bool> TryHaste(SocketUserMessage message)
         {
-            // Program is ready
-            if (!Core.SiliconHandler.Ready) return;
-
-            if (site == null) return;
-
-            // Valid message, no bot, no webhook
-            if (!(socketMessage is SocketUserMessage message)
-                || message.Author.IsBot
-                || message.Author.IsWebhook)
-                return;
-
-            int argPos = 0;
-            if (message.HasCharPrefix('|', ref argPos)) return;
-
             string contents = message.Content;
             bool shouldHastebin = false;
             string extra = "";
 
-            var attachents = message.Attachments;
-            if (attachents.Count == 1 && attachents.ElementAt(0) is Attachment attachment)
+            foreach (var attachment in message.Attachments)
             {
                 if (attachment.Filename.EndsWith(".log") && attachment.Size < 100000)
                 {
@@ -108,15 +91,15 @@ namespace Silicon.Services
             }
 
             if (string.IsNullOrWhiteSpace(contents))
-                return;
+                return false;
 
-            shouldHastebin = contents.Where(c => CodeKeyChars.Contains(c)).Count() > 1
-                && message.Content.Split('\n').Length > 8;
+            shouldHastebin = contents.Where(c => CodeKeyChars.Contains(c)).Count() > 6
+                && message.Content.Split('\n').Length >= 8;
 
             if (shouldHastebin)
             {
                 OfflineCheck();
-                if (site == null) return;
+                if (site == null) return false;
 
                 string hastebinContent = contents.Trim('`');
                 for (int i = 0; i < CodeBlockTypes.Length; i++)
@@ -159,15 +142,17 @@ namespace Silicon.Services
                     string resultContent = await response.Content.ReadAsStringAsync();
 
                     var match = HastebinRegex.Match(resultContent);
-
-                    if (!match.Success) return;
+                    
+                    if (!match.Success) return false;
 
                     string hasteUrl = $"{site}/{match.Groups["key"]}";
                     await msg.ModifyAsync(x => x.Content = $"Automatic Hastebin for {message.Author.Username}" +
                         $"{extra}: {hasteUrl}");
                 }
                 await message.DeleteAsync();
+                return true;
             }
+            return false;
         }
 
         private string ChooseSite()
@@ -182,7 +167,7 @@ namespace Silicon.Services
                 result = ping.Send("pastebin.com");
                 if (result.Status == IPStatus.Success) return "pastebin";
             }
-            catch (PingException e) { Helpers.LoggingHelper.Log(LogSeverity.Warning, Models.LogSource.Service, null, e); }
+            catch (PingException e) { Helpers.LoggingHelper.Log(LogSeverity.Warning, Models.Enums.LogSource.Service, null, e); }
             catch (Exception e) { throw e; }
             return null;
         }

@@ -5,7 +5,6 @@ using Silicon.Models;
 using Silicon.Models.Callbacks;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Silicon.Services
@@ -32,13 +31,9 @@ namespace Silicon.Services
 
         public async Task<SocketMessage> GetResponseAsync(SocketCommandContext context,
             TimeSpan timeout,
-            Func<SocketMessage, bool> judge,
-            CancellationToken token)
+            Func<SocketMessage, bool> judge)
         {
             var eventTrigger = new TaskCompletionSource<SocketMessage>();
-            var cancelTrigger = new TaskCompletionSource<bool>();
-
-            token.Register(() => cancelTrigger.SetResult(true));
 
             Task Handler(SocketMessage message)
             {
@@ -49,7 +44,7 @@ namespace Silicon.Services
             context.Client.MessageReceived += Handler;
 
             var trigger = eventTrigger.Task;
-            var task = await Task.WhenAny(trigger, Task.Delay(timeout), cancelTrigger.Task);
+            var task = await Task.WhenAny(trigger, Task.Delay(timeout));
 
             context.Client.MessageReceived -= Handler;
 
@@ -59,7 +54,7 @@ namespace Silicon.Services
         public async Task<IUserMessage> SendPaginatedMessageAsync(SocketCommandContext context,
             PaginatedOptions pager)
         {
-            var callback = new PaginatedCallback(context, this, pager);
+            var callback = new PaginatedCallback(context, pager);
             await callback.SendAsync();
             AddReactionCallback(callback);
             return callback.Message;

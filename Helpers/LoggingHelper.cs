@@ -1,5 +1,5 @@
 ﻿using Discord;
-using Silicon.Models;
+using Silicon.Models.Enums;
 using System;
 using System.IO;
 using System.Threading.Tasks;

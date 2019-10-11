@@ -2,7 +2,7 @@
 using Silicon.Services;
 using System.Threading.Tasks;
 
-namespace Silicon.Commands.Modules
+namespace Silicon.Commands.Basic
 {
     [RequireOwner]
     [Group("debug")]

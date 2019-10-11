@@ -4,7 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Silicon.Commands.Commons;
 using Silicon.Helpers;
-using Silicon.Models;
+using Silicon.Models.Enums;
 using Silicon.Services;
 using System;
 using System.Diagnostics;
@@ -21,7 +21,7 @@ namespace Silicon.Core
 
         private readonly UserService _user;
 
-        private readonly CommandHandlerService _commandHandler;
+        private readonly TextCrunchService _text;
 
         public static bool Ready { get; private set; }
 
@@ -34,7 +34,7 @@ namespace Silicon.Core
 
             _user = services.GetRequiredService<UserService>();
 
-            _commandHandler = services.GetRequiredService<CommandHandlerService>();
+            _text = services.GetRequiredService<TextCrunchService>();
         }
 
         public async Task StartAsync()
@@ -56,14 +56,13 @@ namespace Silicon.Core
             _client.UserLeft += ClientUserLeft;
 
             _commandService.Log += async m => await LoggingHelper.Log(m);
-            _commandService.CommandExecuted += async (command, context, r) => await CommandHandlerService.CommandExecuted(context, r);
+            _commandService.CommandExecuted += CommandExecuted;
         }
 
         private Task ClientUserLeft(SocketGuildUser user) => _user.RemoveUser(user.Id);
 
         private Task ClientReady()
         {
-            //may be called more than once
             Ready = true;
             //ready.txt is moved to output bin
             Console.Out.WriteLine(Program.ready);
@@ -75,12 +74,25 @@ namespace Silicon.Core
             if (!Ready) return;
             if (!(s is SocketUserMessage msg)) return;
             if (msg.Author.IsBot || msg.Author.IsWebhook) return;
-            if (msg.Content.Length <= 1 || !char.IsLetter(msg.Content[1])) return;
 
             int argPos = 0;
-            if (msg.HasMentionPrefix(_client.CurrentUser, ref argPos) || msg.HasCharPrefix('|', ref argPos))
+            if ((msg.Content.Length <= 1 || !char.IsLetter(msg.Content[1]))
+                && msg.HasMentionPrefix(_client.CurrentUser, ref argPos) || msg.HasCharPrefix('|', ref argPos))
             {
-                await _commandHandler.HandleCmdAsync(msg, argPos);
+                var context = new Commands.PandoraContext(_client, msg);
+
+                await _commandService.ExecuteAsync(context, 1, services);
+            }
+            else if (await _text.TryHaste(msg)) { }
+        }
+
+        private async Task CommandExecuted(Optional<CommandInfo> cmd, ICommandContext context, IResult result)
+        {
+            if (!result.IsSuccess && !result.ErrorReason.IsNullOrWhitespace() && result.ErrorReason != "Unknown command.")
+            {
+                await context.Channel.SendMessageAsync(result.ErrorReason);
+                await LoggingHelper.Log(LogSeverity.Warning, LogSource.Module, result.ErrorReason,
+                    result is ExecuteResult ? ((ExecuteResult)result).Exception : null);
             }
         }
     }

@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
-using Silicon.Models;
+using Silicon.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,11 +71,8 @@ namespace Silicon
             };
         }
 
-        public static SiliconChannel ToDatabaseValue(this SocketGuildChannel c) => new SiliconChannel
-        {
-            Name = c.Name,
-            Snowflake = c.Id
-        };
+        // {"module"}:{"command"}
+        public static string UniqueName(this CommandInfo command) => $"{{\"{command.Module}\"}}:{{\"{command.Name}\"}}";
 
         public static Task<IUserMessage> SendToAsync(this Embed e, IMessageChannel c) =>
             c.SendMessageAsync(string.Empty, false, e);

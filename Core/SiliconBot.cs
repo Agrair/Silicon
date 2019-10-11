@@ -37,12 +37,8 @@ namespace Silicon.Core
                 .AddSingleton(new LiteDB.LiteDatabase("data.db"))
                 .AddSingleton<TagService>()
                 .AddSingleton<UserService>()
-                .AddSingleton<WebService>()
-
-                .AddSingleton<CommandHandlerService>()
 
                 //module services
-                .AddSingleton<ModeratorService>()
                 .AddSingleton<TextCrunchService>()
                 .AddSingleton<InteractiveService>()
 
@@ -56,11 +52,12 @@ namespace Silicon.Core
         {
             Console.Title = "Silicon";
 
+            Directory.CreateDirectory("temp");
+
             await _client.LoginAsync(TokenType.Bot, File.ReadAllText("D:/repos/token.txt"));
             await _client.StartAsync();
 
             await _client.SetStatusAsync(UserStatus.Online);
-            await _client.SetGameAsync("Opening the box");
             await _handler.StartAsync();
 
             string cmd = Console.ReadLine();
@@ -79,11 +76,10 @@ namespace Silicon.Core
             Dispose();
             Environment.Exit(0);
 
-            void Dispose()
+            static void Dispose()
             {
                 foreach (var service in _services.GetServices<IDisposable>()) service.Dispose();
                 _services.Dispose();
-                _client.Dispose();
             }
         }
     }

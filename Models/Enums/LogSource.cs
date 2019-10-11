@@ -1,4 +1,4 @@
-﻿namespace Silicon.Models
+﻿namespace Silicon.Models.Enums
 {
     public enum LogSource : byte
     {

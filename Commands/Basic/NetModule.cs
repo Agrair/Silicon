@@ -1,24 +1,25 @@
 ﻿using Discord;
 using Discord.Commands;
+using Silicon.Commands.Commons;
 using Silicon.Services;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using YoutubeExplode.Models;
 
-namespace Silicon.Commands.Modules
+namespace Silicon.Commands.Basic
 {
     [Group("web")]
-    public class WebModule : PandoraModule
+    [Ratelimit(5, 10)]
+    public class NetModule : PandoraModule
     {
-        public WebService Web { get; set; }
         public InteractiveService Reaction { get; set; }
 
         [Command("yt", RunMode = RunMode.Async)]
         [Summary("Searches on YouTube.")]
         public async Task YT([Remainder] string search = "Terraria")
         {
-            var searchResults = await Web.SearchYoutubeAsync(search);
+            var searchResults = await Helpers.NetHelper.SearchYoutubeAsync(search);
             var lists = searchResults.DivideList(5);
             var pages = new List<string>();
 

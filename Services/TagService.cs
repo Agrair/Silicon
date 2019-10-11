@@ -44,6 +44,8 @@ namespace Silicon.Services
                 collection.EnsureIndex(x => x.Owner);
                 collection.EnsureIndex(x => x.Name);
                 collection.EnsureIndex(x => x.Text);
+
+                countUpdated = true;
             }
         }
 
@@ -63,7 +65,16 @@ namespace Silicon.Services
                 .ToList()).Count != 0;
         }
 
-        public List<Tag> GetPhrases() => collection.FindAll().ToList();
+        private List<Tag> tags;
+        private bool countUpdated = true;
+        public List<Tag> Tags
+        {
+            get
+            {
+                if (countUpdated) { tags = collection.FindAll().ToList(); countUpdated = false; }
+                return tags;
+            }
+        }
 
         public void UnclaimPhrases(ulong user)
         {
@@ -72,6 +83,7 @@ namespace Silicon.Services
                 phrase.Claimed = false;
                 collection.Update(phrase);
             }
+            countUpdated = false;
         }
 
         public bool TryTransfer(SocketUser user, string name, SocketGuildUser newOwner)

@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Silicon.Services;
 using System.Threading.Tasks;
 
 namespace Silicon.Models.Callbacks
@@ -18,12 +17,11 @@ namespace Silicon.Models.Callbacks
         private int curPage;
 
         public PaginatedCallback(SocketCommandContext context,
-            InteractiveService reaction,
             PaginatedOptions options)
-            : base(context, reaction)
+            : base(context)
         {
             Options = options;
-            curPage = options.Pages.Count;
+            curPage = 1;
         }
 
         public async Task SendAsync()
@@ -42,25 +40,25 @@ namespace Silicon.Models.Callbacks
 
         public override async Task<bool> ExecuteAsync(SocketReaction reaction)
         {
-            var emote = reaction.Emote;
+            var emote = reaction.Emote.Name;
 
-            if (emote.Equals(First))
+            if (emote.Equals(First.Name))
                 curPage = 1;
-            else if (emote.Equals(Next))
+            else if (emote.Equals(Next.Name))
             {
                 if (curPage >= Options.Pages.Count)
                     return false;
                 ++curPage;
             }
-            else if (emote.Equals(Back))
+            else if (emote.Equals(Back.Name))
             {
                 if (curPage <= 1)
                     return false;
                 --curPage;
             }
-            else if (emote.Equals(Last))
+            else if (emote.Equals(Last.Name))
                 curPage = Options.Pages.Count;
-            else if (emote.Equals(Stop))
+            else if (emote.Equals(Stop.Name))
             {
                 await Message.DeleteAsync();
                 return true;
