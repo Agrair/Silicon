@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Silicon.Commands.Commons;
@@ -81,7 +81,7 @@ namespace Silicon.Commands.Basic
                 var commands = QualifiedCommands(module);
                 if (commands.Count > 0)
                 {
-                    builder.AppendLine(module.ModuleName().ToUpper().Bold());
+                    builder.AppendLine(module.Name.ToUpper().Bold());
                     builder.AppendLine(aliases(module) + GetSubmodules(module));
                     foreach (var command in commands)
                     {
@@ -95,7 +95,7 @@ namespace Silicon.Commands.Basic
             }
         }
 
-        private bool TryFindModule(ModuleInfo query, string[] arr, ref int index, out ModuleInfo result)
+        private static bool TryFindModule(ModuleInfo query, string[] arr, ref int index, out ModuleInfo result)
         {
             result = null;
             if (query.Name.EqualsIgnoreCase(arr[index]))
@@ -122,7 +122,7 @@ namespace Silicon.Commands.Basic
             var submodules = module.Submodules.Where(x => QualifiedCommands(x).Count() > 0);
             return module.Submodules.Any()
                 ? $"Submodule{(module.Submodules.Count() > 1 ? "s" : "")}: " +
-                $"{string.Join(", ", module.Submodules.Select(m => m.ModuleName().ToUpper()))}\n"
+                $"{string.Join(", ", module.Submodules.Select(m => m.Name.ToUpper()))}\n"
                 : "";
         }
 
@@ -159,7 +159,7 @@ namespace Silicon.Commands.Basic
             }
         }
 
-        public string GetParams(CommandInfo command)
+        public static string GetParams(CommandInfo command)
         {
             StringBuilder output = new StringBuilder();
             if (!command.Parameters.Any()) return output.ToString();
@@ -177,14 +177,14 @@ namespace Silicon.Commands.Basic
             return output.ToString();
         }
 
-        public string GetPrefix(CommandInfo command)
+        public static string GetPrefix(CommandInfo command)
         {
             var output = GetPrefix(command.Module);
             output += command.Aliases.FirstOrDefault();
             return output;
         }
 
-        public string GetPrefix(ModuleInfo module)
+        public static string GetPrefix(ModuleInfo module)
         {
             string output = "";
             if (module.Parent != null) output = $"{GetPrefix(module.Parent)}{output}";

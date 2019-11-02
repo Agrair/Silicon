@@ -6,21 +6,20 @@ namespace Silicon.Services
 {
     public class UserService
     {
-        private readonly LiteDB.LiteCollection<SiliconUser> collection;
+        private readonly LiteDB.LiteCollection<UserConfig> collection;
         private readonly TagService tags;
 
         public UserService(LiteDB.LiteDatabase db, TagService t)
         {
-            collection = db.GetCollection<SiliconUser>("users");
+            collection = db.GetCollection<UserConfig>("users");
             tags = t;
         }
 
-        public Task RemoveUser(ulong id)
+        public void RemoveUser(ulong id)
         {
             collection.Delete(x => x.Snowflake == id);
             tags.UnclaimPhrases(id);
             countUpdated = true;
-            return Task.CompletedTask;
         }
 
         public bool LockTimeslot(ulong id,
@@ -51,15 +50,18 @@ namespace Silicon.Services
 
         //private SiliconUser EnsureUser(ulong id) => EnsureUser(id, out _);
 
-        private SiliconUser EnsureUser(ulong id, out bool existed)
+        private UserConfig EnsureUser(ulong id, out bool existed)
         {
             existed = true;
+            LiteDB.BsonValue docID = null;
             if (!collection.Exists(x => x.Snowflake == id))
             {
-                collection.Insert(new SiliconUser(id));
+                docID = collection.Insert(new UserConfig(id));
+                collection.EnsureIndex(x => x.Snowflake);
                 existed = false;
+                countUpdated = true;
             }
-            return collection.FindOne(x => x.Snowflake == id);
+            return existed ? collection.FindOne(x => x.Snowflake == id) : collection.FindById(docID);
         }
 
         private int userCount;

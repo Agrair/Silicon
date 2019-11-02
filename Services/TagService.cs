@@ -83,7 +83,7 @@ namespace Silicon.Services
                 phrase.Claimed = false;
                 collection.Update(phrase);
             }
-            countUpdated = false;
+            countUpdated = true;
         }
 
         public bool TryTransfer(SocketUser user, string name, SocketGuildUser newOwner)

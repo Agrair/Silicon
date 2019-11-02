@@ -1,14 +1,12 @@
 ﻿using Discord;
 using Discord.Commands;
-using Silicon.Commands.Commons;
 using Silicon.Services;
 using System;
 using System.Threading.Tasks;
 
 namespace Silicon.Commands
 {
-    [Ratelimit(5, 5)]
-    public abstract class PandoraModule : ModuleBase<PandoraContext>
+    public abstract class PandoraModule : ModuleBase<SocketCommandContext>
     {
         public InteractiveService Interactive { get; set; }
 

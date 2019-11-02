@@ -83,8 +83,6 @@ namespace Silicon
             return guildChannel.AddPermissionOverwriteAsync(guildChannel.Guild.EveryoneRole, perms);
         }
 
-        public static string ModuleName(this ModuleInfo module) => module.Name.Bold();
-
         public static string Highlight(this string str) => $"`{str}`";
 
         public static string Bold(this string str) => $"**{str}**";

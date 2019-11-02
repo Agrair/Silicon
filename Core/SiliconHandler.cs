@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
@@ -59,7 +59,11 @@ namespace Silicon.Core
             _commandService.CommandExecuted += CommandExecuted;
         }
 
-        private Task ClientUserLeft(SocketGuildUser user) => _user.RemoveUser(user.Id);
+        private Task ClientUserLeft(SocketGuildUser user)
+        {
+            if (user.MutualGuilds.Count == 0) _user.RemoveUser(user.Id);
+            return Task.CompletedTask;
+        }
 
         private Task ClientReady()
         {

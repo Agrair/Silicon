@@ -3,18 +3,17 @@ using System.Collections.Generic;
 
 namespace Silicon.Models
 {
-    public class SiliconUser
+    public class UserConfig
     {
-        public SiliconUser(ulong id)
+        public UserConfig(ulong id)
         {
             Snowflake = id;
-            TimeSlots = new Dictionary<string, DateTimeOffset>();
         }
 
         public int Id { get; set; }
 
         public ulong Snowflake { get; set; }
 
-        public Dictionary<string, DateTimeOffset> TimeSlots { get; set; }
+        public Dictionary<string, DateTimeOffset> TimeSlots { get; set; } = new Dictionary<string, DateTimeOffset>();
     }
 }
