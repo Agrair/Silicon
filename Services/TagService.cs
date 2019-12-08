@@ -51,7 +51,8 @@ namespace Silicon.Services
 
         private Tag InternalGetTag(string name, IUser owner, bool serverWide = false)
         {
-            var result = collection.FindOne(x => x.Owner == owner.Id && x.Name.EqualsIgnoreCase(name));
+            var result = collection.FindOne(x => x.Owner == owner.Id
+                && x.Name.EqualsIgnoreCase(name));
             if (serverWide && result == null) result = collection.FindOne(x => x.Name.EqualsIgnoreCase(name));
             return result;
         }
@@ -92,6 +93,19 @@ namespace Silicon.Services
             if (phrase != null)
             {
                 phrase.Owner = newOwner.Id;
+                collection.Update(phrase);
+                return true;
+            }
+            return false;
+        }
+
+        public bool TryClaim(SocketUser user, string name)
+        {
+            var phrase = InternalGetTag(name, user);
+            if (phrase != null && !phrase.Claimed)
+            {
+                phrase.Owner = user.Id;
+                phrase.Claimed = true;
                 collection.Update(phrase);
                 return true;
             }

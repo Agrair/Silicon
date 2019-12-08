@@ -41,9 +41,8 @@ namespace Silicon.Commands.Basic
             var builder = new EmbedBuilder()
                 .WithTitle($"{user.Nickname ?? user.Username}#{user.Discriminator} ({(user.IsBot ? "Bot" : "User")}) {(user.IsMuted ? "(Muted)" : "")} Info - Silicon")
                 .WithFooter(user.Status.ToString());
-            if (user.JoinedAt != null) builder.AddField("Joined at", user.JoinedAt?.ToUniversalTime());
+            if (user.JoinedAt.HasValue) builder.AddField("Joined at", user.JoinedAt?.ToUniversalTime());
             builder.AddField("Using Discord since", user.CreatedAt.ToUniversalTime());
-            if (user.Activity != null) builder.AddField(user.Activity.Type.ToString(), user.Activity.Name);
             if (user.VoiceChannel != null) builder.AddField("Voice channel", user.VoiceChannel.Name);
             builder.AddField("Role count", user.Roles.Count);
             builder.AddField("Guild hierarchy pos", user.Hierarchy);
@@ -54,7 +53,6 @@ namespace Silicon.Commands.Basic
         private static List<string> modules;
 
         [Command("help")]
-        [Summary("Admin commands can be found (not used) via a private/group DM.")]
         public async Task Help()
         {
             if (modules == null)
@@ -62,36 +60,36 @@ namespace Silicon.Commands.Basic
                 modules = new List<string>();
                 foreach (var mod in Commands.Modules.Where(m => m.Parent == null))
                 {
-                    describeModule(mod, ref modules);
+                    DescribeModule(mod, ref modules);
                 }
             }
             await Interactive.SendPaginatedMessageAsync(Context,
                 new Models.PaginatedOptions("Modules", new Color(0xff0066), modules));
+        }
+
+        private void DescribeModule(ModuleInfo module, ref List<string> list)
+        {
+            var builder = new StringBuilder();
+            var commands = QualifiedCommands(module);
+            if (commands.Count > 0)
+            {
+                builder.AppendLine(module.Name.ToUpper().Bold());
+                builder.AppendLine(aliases(module) + GetSubmodules(module));
+                foreach (var command in commands)
+                {
+                    GetCommand(command, out var name, out var text);
+                    builder.AppendLine(name + "\n" + text + "\n");
+                }
+                list.Add(builder.ToString());
+                builder.Clear();
+            }
+            foreach (var sub in module.Submodules) DescribeModule(sub, ref list);
 
             static string aliases(ModuleInfo module)
             {
                 return !module.Aliases.First().IsNullOrWhitespace()
                     ? $"Prefix{(module.Aliases.Count() > 1 ? "es" : "")}: {string.Join(",", module.Aliases)}\n"
                     : "";
-            }
-
-            void describeModule(ModuleInfo module, ref List<string> list)
-            {
-                var builder = new StringBuilder();
-                var commands = QualifiedCommands(module);
-                if (commands.Count > 0)
-                {
-                    builder.AppendLine(module.Name.ToUpper().Bold());
-                    builder.AppendLine(aliases(module) + GetSubmodules(module));
-                    foreach (var command in commands)
-                    {
-                        GetCommand(command, out var name, out var text);
-                        builder.AppendLine(name + "\n" + text + "\n");
-                    }
-                    list.Add(builder.ToString());
-                    builder.Clear();
-                }
-                foreach (var sub in module.Submodules) describeModule(sub, ref list);
             }
         }
 

@@ -52,8 +52,6 @@ namespace Silicon.Core
         {
             Console.Title = "Silicon";
 
-            Directory.CreateDirectory("temp");
-
             await _client.LoginAsync(TokenType.Bot, File.ReadAllText("D:/repos/token.txt"));
             await _client.StartAsync();
 

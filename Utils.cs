@@ -1,10 +1,8 @@
 ﻿using Discord;
-using Discord.Commands;
 using Silicon.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Silicon
 {
@@ -56,9 +54,9 @@ namespace Silicon
 
         public static bool IsNullOrWhitespace(this string str) => string.IsNullOrWhiteSpace(str);
 
-        public static bool EqualsIgnoreCase(this string first, string sec) => first.ToLower() == sec.ToLower();
+        public static bool EqualsIgnoreCase(this string first, string sec) => first.Equals(sec, StringComparison.OrdinalIgnoreCase);
 
-        public static bool ContainsIgnoreCase(this string first, string sec) => first.ToLower().Contains(sec.ToLower());
+        public static bool ContainsIgnoreCase(this string first, string sec) => first.Contains(sec, StringComparison.OrdinalIgnoreCase);
 
         public static LogSource GetLogSrc(this LogMessage msg)
         {
@@ -69,18 +67,6 @@ namespace Silicon
                 "Gateway" => LogSource.Gateway,
                 _ => LogSource.Unknown,
             };
-        }
-
-        // {"module"}:{"command"}
-        public static string UniqueName(this CommandInfo command) => $"{{\"{command.Module}\"}}:{{\"{command.Name}\"}}";
-
-        public static Task<IUserMessage> SendToAsync(this Embed e, IMessageChannel c) =>
-            c.SendMessageAsync(string.Empty, false, e);
-
-        public static Task AddEveryonePermAsync(this IChannel channel, OverwritePermissions perms)
-        {
-            var guildChannel = channel as IGuildChannel;
-            return guildChannel.AddPermissionOverwriteAsync(guildChannel.Guild.EveryoneRole, perms);
         }
 
         public static string Highlight(this string str) => $"`{str}`";

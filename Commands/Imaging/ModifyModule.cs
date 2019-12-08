@@ -20,7 +20,7 @@ namespace Silicon.Commands.Imaging
         [Summary("Inverts the image associated with the specified url.")]
         public async Task Invert(string url)
         {
-            await Context.Channel.SendFileAsync(ImageHelper.Invert(await NetHelper.GetHttpStream(url), url), "inverted.png");
+            await Context.Channel.SendFileAsync(ImageHelper.Invert(await NetHelper.GetHttpStream(url)), "inverted.png");
         }
     }
 }

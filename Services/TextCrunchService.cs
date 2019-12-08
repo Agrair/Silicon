@@ -20,8 +20,6 @@ namespace Silicon.Services
         private static readonly Regex HastebinRegex = new Regex(@"{""key"":""(?<key>[a-z].*)""}",
             RegexOptions.Compiled);
 
-        private readonly DiscordSocketClient _client;
-
         private readonly string[] CodeBlockTypes = new string[]
         {
             "html",
@@ -51,9 +49,8 @@ namespace Silicon.Services
         private readonly Timer offlineCheck;
         private string site;
 
-        public TextCrunchService(DiscordSocketClient client)
+        public TextCrunchService()
         {
-            _client = client;
             site = ChooseSite();
             offlineCheck = new Timer(_ => OfflineCheck(), null,
                 TimeSpan.FromDays(1), TimeSpan.FromDays(1));

@@ -20,42 +20,54 @@ namespace Silicon.Commands.Basic
         [Command]
         [Priority(-1)]
         [Summary("Gets a tag.")]
-        public async Task GetTag(string name)
+        public Task GetTag(string name)
         {
             if (Tags.TryGetTag(name, Context.User, out Tag value))
             {
+#if MULTIGUILD
+                if (Context.Guild.GetUser(value.Owner) == null) 
+                    return ReplyAsync($"Tag not found for user {Context.User}.");
+#endif
+
                 var builder = new EmbedBuilder()
                     .WithDescription(value.Text)
                     .WithTitle(name);
                 if (value.Color != -1) builder.WithColor(new Color((uint)value.Color));
                 if (value.Claimed) builder.WithAuthor(Context.Client.GetUser(value.Owner));
-                await ReplyAsync(builder.Build());
+                return ReplyAsync(builder.Build());
             }
-            else await ReplyAsync($"Tag not found for user {Context.User}.");
+            return FindTags(name);
         }
+
+        //TODO: tag edit
 
         [Name("~get")]
         [Command]
         [Priority(-1)]
         [Summary("Gets a tag.")]
-        public async Task GetTag(string name, SocketGuildUser user)
+        public Task GetTag(string name, SocketGuildUser user)
         {
             if (Tags.TryGetTag(name, user, out Tag value))
             {
+#if MULTIGUILD
+                if (Context.Guild.GetUser(value.Owner) == null)
+                    return ReplyAsync($"Tag not found for user {Context.User}.");
+#endif
+
                 var builder = new EmbedBuilder()
                     .WithDescription(value.Text)
                     .WithTitle(name);
                 if (value.Color != -1) builder.WithColor(new Color((uint)value.Color));
                 if (value.Claimed) builder.WithAuthor(Context.Client.GetUser(value.Owner));
-                await ReplyAsync(builder.Build());
+                return ReplyAsync(builder.Build());
             }
-            else await ReplyAsync($"Tag not found for {user}.");
+            return ReplyAsync($"Tag not found for {user}.");
         }
 
         [Command("find")]
         [Alias("search")]
         [Summary("Searches for a tag containing the follow text.")]
-        public async Task FindTags([Remainder] string search)
+        public Task FindTags([Remainder] string search)
         {
             if (Tags.TryFindTag(search, out List<Tag> list))
             {
@@ -65,18 +77,18 @@ namespace Silicon.Commands.Basic
                 {
                     Tag tag = list[i];
                     bldr.AppendLine($"{i + 1}. {Context.Client.GetUser(tag.Owner).Mention}: {tag.Name} " +
-                        $"`|tag {tag.Name} {tag.Owner}`");
+                        $"`|tag {tag.Name}{(tag.Claimed ? "" : " (Unclaimed)")} {tag.Owner}`");
                 }
-                await ReplyAsync(new EmbedBuilder()
+                return ReplyAsync(new EmbedBuilder()
                     .WithTitle($"Showing {count}/{list.Count} tags")
                     .WithDescription(bldr.ToString()).Build());
             }
-            else await ReplyAsync("No tags found.");
+            else return ReplyAsync("No tags found.");
         }
 
         [Command("list")]
         [Summary("Displays one page of tags.")]
-        public async Task ListTags(int page = 1)
+        public Task ListTags(int page = 1)
         {
             page -= 1;
             var bldr = new StringBuilder();
@@ -87,9 +99,9 @@ namespace Silicon.Commands.Basic
             {
                 Tag tag = Tags.Tags[i];
                 bldr.AppendLine($"{i + 1}. {Context.Client.GetUser(tag.Owner).Mention}: {tag.Name} " +
-                    $"`|tag {tag.Name} {tag.Owner}`");
+                    $"`|tag {tag.Name}{(tag.Claimed ? "" : " (Unclaimed)")} {tag.Owner}`");
             }
-            await ReplyAsync(new EmbedBuilder()
+            return ReplyAsync(new EmbedBuilder()
                 .WithTitle($"Page {page + 1}/{pageCount}")
                 .WithDescription(bldr.ToString()).Build());
         }
@@ -118,7 +130,16 @@ namespace Silicon.Commands.Basic
                 await ReplyAsync("Successfully set tag");
             }
 
-            //TODO: |tag edit
+            [Command("claim")]
+            [Summary("Claims a tag without an owner.")]
+            public async Task Claim(string name)
+            {
+                if (Tag.TryClaim(Context.User, name))
+                {
+                    await ReplyAsync("Successfully claimed tag.");
+                }
+                await ReplyAsync("Could not find unclaimed tag.");
+            }
 
             [Command("transer")]
             [Summary("Transfers ownership of one your tags to someone else.")]
