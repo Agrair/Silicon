@@ -46,7 +46,7 @@ namespace Silicon.Commands.Basic
             if (user.VoiceChannel != null) builder.AddField("Voice channel", user.VoiceChannel.Name);
             builder.AddField("Role count", user.Roles.Count);
             builder.AddField("Guild hierarchy pos", user.Hierarchy);
-            builder.WithImageUrl(user.GetAvatarUrl());
+            builder.WithImageUrl(user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
             await ReplyAsync(builder.Build());
         }
 

@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿/*
+using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Silicon.Services;
 using System;
@@ -36,3 +37,4 @@ namespace Silicon.Commands.Commons
         }
     }
 }
+*/

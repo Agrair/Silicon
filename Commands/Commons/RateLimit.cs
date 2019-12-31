@@ -11,6 +11,8 @@ namespace Silicon.Commands.Commons
         private readonly uint invokeLimit;
         private readonly TimeSpan invokePeriod;
         private readonly Dictionary<ulong, CommandTimeout> tracker = new Dictionary<ulong, CommandTimeout>();
+        //move to a faster model like skip list
+        private readonly List<ulong> warned = new List<ulong>();
 
         public RatelimitAttribute(
             uint times,
@@ -29,19 +31,27 @@ namespace Silicon.Commands.Commons
             var result = PreconditionResult.FromSuccess();
 
             var now = DateTimeOffset.UtcNow;
-            var key = context.User.Id;
+            var user = context.User.Id;
 
-            var timeout = (tracker.TryGetValue(key, out var t)
-                && ((now - t.FirstInvoke) < invokePeriod))
-                    ? t : new CommandTimeout(now);
+            //var timeout = (tracker.TryGetValue(user, out var t)
+            //    && ((now - t.FirstInvoke) < invokePeriod))
+            //        ? t : new CommandTimeout(now);
+            CommandTimeout timeout = null;
+            if (tracker.TryGetValue(user, out var t) && (now - t.FirstInvoke) < invokePeriod) timeout = t;
+            else
+            {
+                timeout = new CommandTimeout(now);
+                warned.Remove(user);
+            }
 
             if (++timeout.TimesInvoked <= invokeLimit)
             {
-                tracker[key] = timeout;
+                tracker[user] = timeout;
             }
-            else
+            else if (!warned.Contains(user))
             {
                 result = PreconditionResult.FromError($"You're going too fast!");
+                warned.Add(user);
             }
             return Task.FromResult(result);
         }

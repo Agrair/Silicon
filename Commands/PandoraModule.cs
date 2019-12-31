@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace Silicon.Commands
 {
-    [IsEnabled]
     public abstract class PandoraModule : ModuleBase<SocketCommandContext>
     {
         public InteractiveService Interactive { get; set; }

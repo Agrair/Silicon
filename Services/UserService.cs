@@ -48,20 +48,19 @@ namespace Silicon.Services
             return result;
         }
 
-        //private SiliconUser EnsureUser(ulong id) => EnsureUser(id, out _);
-
         private UserConfig EnsureUser(ulong id, out bool existed)
         {
             existed = true;
             LiteDB.BsonValue docID = null;
-            if (!collection.Exists(x => x.Snowflake == id))
+            var value = collection.FindOne(x => x.Snowflake == id);
+            if (value != null)
             {
                 docID = collection.Insert(new UserConfig(id));
                 collection.EnsureIndex(x => x.Snowflake);
                 existed = false;
                 countUpdated = true;
             }
-            return existed ? collection.FindOne(x => x.Snowflake == id) : collection.FindById(docID);
+            return existed ? value : collection.FindById(docID);
         }
 
         private int userCount;

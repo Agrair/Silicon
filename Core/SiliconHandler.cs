@@ -9,7 +9,6 @@ using Silicon.Services;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Silicon.Core
@@ -81,7 +80,7 @@ namespace Silicon.Core
             if (msg.Author.IsBot || msg.Author.IsWebhook) return;
 
             int argPos = 0;
-            if (msg.Content.Length <= 2 || !char.IsLetter(msg.Content[0]) || !char.IsLetter(msg.Content[1])) return;
+            if (msg.Content.Length <= 2) return;
             if (msg.HasMentionPrefix(_client.CurrentUser, ref argPos) || msg.HasStringPrefix("s|", ref argPos))
             {
                 //TODO: check for proper channel
@@ -90,14 +89,8 @@ namespace Silicon.Core
                 await _commandService.ExecuteAsync(context, argPos, services);
             }
             else if (await _text.TryHaste(msg))
-                _ = LoggingHelper.Log(LogSeverity.Verbose, LogSource.Silicon, "Hasted msg");
-            else if (IAmRegex.IsMatch(msg.Content))
-            {
-                var match = IAmRegex.Match(msg.Content);
-                _ = msg.Channel.SendMessageAsync($"Hi {match.Groups["name"]}, I'm Silicon!");
-            }
+                _ = LoggingHelper.Log(LogSeverity.Verbose, LogSource.Silicon, $"Hasted message {msg.Id} by {msg.Author.Id} in {msg.Channel.Id}");
         }
-        private static readonly Regex IAmRegex = new Regex("(?:i'm|i am|im) (?<name>.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private async Task CommandExecuted(Optional<CommandInfo> cmd, ICommandContext context, IResult result)
         {
