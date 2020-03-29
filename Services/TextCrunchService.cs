@@ -75,7 +75,8 @@ namespace Silicon.Services
             bool shouldHastebin = false;
             string extra = "";
 
-            foreach (var attachment in message.Attachments)
+            var attachment = message.Attachments.First();
+            if (attachment != null)
             {
                 if (attachment.Filename.EndsWith(".log") && attachment.Size < 100000)
                 {
@@ -104,7 +105,7 @@ namespace Silicon.Services
                     string keyword = CodeBlockTypes[i];
                     if (hastebinContent.StartsWith(keyword + "\n"))
                     {
-                        hastebinContent = hastebinContent.Substring(keyword.Length);
+                        hastebinContent = hastebinContent.Substring(keyword.Length).TrimStart('\n');
                         break;
                     }
                 }

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Silicon.Models
 {
-    public class PaginatedOptions
+    public class PaginationData
     {
         public string Name { get; }
         public Color Color { get; }
         public IReadOnlyList<string> Pages { get; }
 
-        public PaginatedOptions(string name, Color color, IReadOnlyList<string> pages)
+        public PaginationData(string name, Color color, IReadOnlyList<string> pages)
         {
             Name = name;
             Color = color;

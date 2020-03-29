@@ -50,24 +50,30 @@ namespace Silicon.Commands.Basic
             await ReplyAsync(builder.Build());
         }
 
-        private static List<string> modules;
+        private static List<ModuleInfo> modules;
 
         [Command("help")]
-        public async Task Help()
+        public async Task Help([Remainder] string target = null)
         {
+            //TODO recursion for sub modules
             if (modules == null)
             {
-                modules = new List<string>();
+                modules = new List<ModuleInfo>();
                 foreach (var mod in Commands.Modules.Where(m => m.Parent == null))
                 {
-                    DescribeModule(mod, ref modules);
+                    modules.Add(mod);
                 }
             }
-            await Interactive.SendPaginatedMessageAsync(Context,
-                new Models.PaginatedOptions("Modules", new Color(0xff0066), modules));
+            foreach (var )
+            {
+                await Interactive.SendPaginatedMessageAsync(Context,
+                    new Models.PaginationData(target.ToUpper(), new Color(0xff0066), new List<string> { text }));
+            }
+            else await Interactive.SendPaginatedMessageAsync(Context,
+                new Models.PaginationData("Modules", new Color(0xff0066), modules.Values.ToList()));
         }
 
-        private void DescribeModule(ModuleInfo module, ref List<string> list)
+        private void DescribeModule(ModuleInfo module, ref List<ModuleInfo> list)
         {
             var builder = new StringBuilder();
             var commands = QualifiedCommands(module);
@@ -80,7 +86,7 @@ namespace Silicon.Commands.Basic
                     GetCommand(command, out var name, out var text);
                     builder.AppendLine(name + "\n" + text + "\n");
                 }
-                list.Add(builder.ToString());
+                list.Add(module.Name, builder.ToString());
                 builder.Clear();
             }
             foreach (var sub in module.Submodules) DescribeModule(sub, ref list);

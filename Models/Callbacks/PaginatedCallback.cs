@@ -13,11 +13,11 @@ namespace Silicon.Models.Callbacks
         private readonly IEmote Last = new Emoji("⏭");
         private readonly IEmote Stop = new Emoji("⏹");
 
-        public PaginatedOptions Options { get; }
+        public PaginationData Options { get; }
         private int curPage;
 
         public PaginatedCallback(SocketCommandContext context,
-            PaginatedOptions options)
+            PaginationData options)
             : base(context)
         {
             Options = options;

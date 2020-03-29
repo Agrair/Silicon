@@ -52,7 +52,7 @@ namespace Silicon.Services
         }
 
         public async Task<IUserMessage> SendPaginatedMessageAsync(SocketCommandContext context,
-            PaginatedOptions pager)
+            PaginationData pager)
         {
             var callback = new PaginatedCallback(context, pager);
             await callback.SendAsync();

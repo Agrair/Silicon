@@ -5,6 +5,7 @@ using Silicon.Services;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using YoutubeExplode;
 using YoutubeExplode.Models;
 
 namespace Silicon.Commands.Basic
@@ -13,13 +14,14 @@ namespace Silicon.Commands.Basic
     [Ratelimit(5, 10)]
     public class NetModule : PandoraModule
     {
+        private static readonly IYoutubeClient yt = new YoutubeClient();
         public InteractiveService Reaction { get; set; }
 
         [Command("yt", RunMode = RunMode.Async)]
         [Summary("Searches on YouTube.")]
         public async Task YT([Remainder] string search = "Terraria")
         {
-            var searchResults = await Helpers.NetHelper.SearchYoutubeAsync(search);
+            var searchResults = await yt.SearchVideosAsync(search, 2);
             var lists = searchResults.DivideList(5);
             var pages = new List<string>();
 
@@ -41,7 +43,7 @@ namespace Silicon.Commands.Basic
             }
 
             await Reaction.SendPaginatedMessageAsync(Context,
-                new Models.PaginatedOptions("YouTube", new Color(0xff0000), pages));
+                new Models.PaginationData("YouTube", new Color(0xff0000), pages));
 
             static string desc(Video query)
             {
