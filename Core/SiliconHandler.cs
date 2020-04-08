@@ -9,6 +9,7 @@ using Silicon.Services;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Silicon.Core
@@ -42,12 +43,12 @@ namespace Silicon.Core
             var sw = Stopwatch.StartNew();
 
             _commandService.AddTypeReader<Color>(new ColorReader());
-            var m = await _commandService.AddModulesAsync(System.Reflection.Assembly.GetEntryAssembly(), services);
+            var modules = await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), services);
 
             sw.Stop();
 
             await LoggingHelper.Log(LogSeverity.Info, LogSource.Silicon,
-                $"Loaded {m.Count()} modules and {m.Sum(m => m.Commands.Count)}" +
+                $"Loaded {modules.Count()} modules and {modules.Sum(m => m.Commands.Count)}" +
                 $" commands loaded in {sw.ElapsedMilliseconds}ms.");
 
             _client.Log += async m => await LoggingHelper.Log(m);

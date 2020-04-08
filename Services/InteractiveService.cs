@@ -66,7 +66,7 @@ namespace Silicon.Services
         {
             if (reaction.UserId == _client.CurrentUser.Id) return;
             if (!reactions.TryGetValue(message.Id, out var callback)) return;
-            if (!await callback.JudgeAsync(reaction)) return;
+            if (!callback.Judge(reaction)) return;
             if (callback.Async)
             {
                 _ = Task.Run(async () =>

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Silicon.Commands.Commons
 {
-    internal sealed class Timeslot : PreconditionAttribute
+    public sealed class Timeslot : PreconditionAttribute
     {
         private readonly TimeSpan time;
         private readonly string timeslot;

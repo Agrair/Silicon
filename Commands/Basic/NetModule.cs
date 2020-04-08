@@ -10,7 +10,7 @@ using YoutubeExplode.Models;
 
 namespace Silicon.Commands.Basic
 {
-    [Group("web")]
+    [Group("net")]
     [Ratelimit(5, 10)]
     public class NetModule : PandoraModule
     {

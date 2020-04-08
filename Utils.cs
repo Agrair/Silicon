@@ -1,8 +1,11 @@
 ﻿using Discord;
+using Discord.Commands;
+using Silicon.Commands.Commons;
 using Silicon.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Silicon
 {
@@ -20,11 +23,6 @@ namespace Silicon
             return collection.Select((v, i) => new { Index = i, Value = v })
                 .GroupBy(x => x.Index / chunkSize)
                 .Select(g => g.Select(x => x.Value).ToList()).ToList();
-        }
-
-        public static T NextIndex<T>(this IEnumerable<T> arr)
-        {
-            return arr.ElementAt(Program.rand.Next(arr.Count()));
         }
 
         public static string Normalize(this TimeSpan span)
@@ -72,5 +70,15 @@ namespace Silicon
         public static string Highlight(this string str) => $"`{str}`";
 
         public static string Bold(this string str) => $"**{str}**";
+
+        public static string UniqueName(this ModuleInfo module)
+        {
+            var attributes = module.GetType().GetCustomAttributes();
+            foreach (var attr in attributes)
+            {
+                if (attr is UniqueNameAttribute idAttribute) return idAttribute.id;
+            }
+            return module.Name;
+        }
     }
 }

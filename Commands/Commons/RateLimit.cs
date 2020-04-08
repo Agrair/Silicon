@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Discord.Commands;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Discord.Commands;
 
 namespace Silicon.Commands.Commons
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = true)]
-    internal sealed class RatelimitAttribute : PreconditionAttribute
+    public sealed class RatelimitAttribute : PreconditionAttribute
     {
         private readonly uint invokeLimit;
         private readonly TimeSpan invokePeriod;

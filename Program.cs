@@ -7,8 +7,8 @@ namespace Silicon
     {
         public static readonly Random rand = new Random();
         public static readonly string ready = File.ReadAllText(@"ready.txt");
-        internal static ulong userID = 588515073396310036;
-        internal static string avatar = "https://" +
+        public static ulong userID = 588515073396310036;
+        public static string avatar = "https://" +
             "cdn.discordapp.com/avatars/588515073396310036/" +
             "e21fb266ba7c9bc07304af5d9f24dea1.png";
 

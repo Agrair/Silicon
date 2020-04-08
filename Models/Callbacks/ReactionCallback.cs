@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Silicon.Models.Callbacks
 {
-    public abstract class ReactionCallback : ICallback
+    public abstract class ReactionCallback
     {
         public IUserMessage Message { get; protected set; }
 
@@ -18,8 +18,8 @@ namespace Silicon.Models.Callbacks
             FirstContext = context;
         }
 
-        public virtual Task<bool> JudgeAsync(SocketReaction reaction) => 
-            Task.FromResult(FirstContext.User.Id == reaction.UserId && FirstContext.Channel.Id == reaction.Channel.Id);
+        public virtual bool Judge(SocketReaction reaction) =>
+            FirstContext.User.Id == reaction.UserId && FirstContext.Channel.Id == reaction.Channel.Id;
 
         public abstract Task<bool> ExecuteAsync(SocketReaction reaction);
     }

@@ -50,48 +50,70 @@ namespace Silicon.Commands.Basic
             await ReplyAsync(builder.Build());
         }
 
-        private static List<ModuleInfo> modules;
+        private Dictionary<string, string> modules;
 
+        //unoptimized but whatever
         [Command("help")]
         public async Task Help([Remainder] string target = null)
         {
-            //TODO recursion for sub modules
             if (modules == null)
             {
-                modules = new List<ModuleInfo>();
-                foreach (var mod in Commands.Modules.Where(m => m.Parent == null))
+                modules = new Dictionary<string, string>();
+                foreach (var module in Commands.Modules)
                 {
-                    modules.Add(mod);
+                    if (module.Parent != null) continue;
+                    DescribeFullModule(module);
                 }
             }
-            foreach (var )
+            if (target == null)
             {
                 await Interactive.SendPaginatedMessageAsync(Context,
-                    new Models.PaginationData(target.ToUpper(), new Color(0xff0066), new List<string> { text }));
+                    new Models.PaginationData("Modules", new Color(0xff0066), modules.Values.ToList()));
             }
-            else await Interactive.SendPaginatedMessageAsync(Context,
-                new Models.PaginationData("Modules", new Color(0xff0066), modules.Values.ToList()));
+            else
+            {
+                var args = target.Split(' ');
+                int index = 0;
+                foreach (var module in Commands.Modules)
+                {
+                    if (TryFindModule(module, args, ref index, out var result))
+                    {
+                        await ReplyAsync(new EmbedBuilder()
+                            .WithTitle(target)
+                            .WithDescription(modules[result.UniqueName()])
+                            .WithColor(new Color(0xff0066))
+                            .Build());
+                        return;
+                    }
+                }
+                await ReplyAsync("Could not find module.");
+            }
         }
 
-        private void DescribeModule(ModuleInfo module, ref List<ModuleInfo> list)
+        private void DescribeFullModule(ModuleInfo module)
+        {
+            modules.Add(module.UniqueName(), DescribeSingleModule(module));
+            foreach (var sub in module.Submodules) DescribeFullModule(sub);
+        }
+
+        private string DescribeSingleModule(ModuleInfo module)
         {
             var builder = new StringBuilder();
             var commands = QualifiedCommands(module);
-            if (commands.Count > 0)
+            if (commands.Count == 0) return null;
+            builder.AppendLine(module.Name.ToUpper().Bold());
+            builder.AppendLine(prefixes(module) + GetSubmodules(module));
+            foreach (var cmd in commands)
             {
-                builder.AppendLine(module.Name.ToUpper().Bold());
-                builder.AppendLine(aliases(module) + GetSubmodules(module));
-                foreach (var command in commands)
-                {
-                    GetCommand(command, out var name, out var text);
-                    builder.AppendLine(name + "\n" + text + "\n");
-                }
-                list.Add(module.Name, builder.ToString());
-                builder.Clear();
+                GetCommand(cmd, out var name, out var text);
+                builder.AppendLine();
+                builder.AppendLine(name);
+                builder.AppendLine(text);
             }
-            foreach (var sub in module.Submodules) DescribeModule(sub, ref list);
+            return builder.ToString();
 
-            static string aliases(ModuleInfo module)
+
+            static string prefixes(ModuleInfo module)
             {
                 return !module.Aliases.First().IsNullOrWhitespace()
                     ? $"Prefix{(module.Aliases.Count() > 1 ? "es" : "")}: {string.Join(",", module.Aliases)}\n"
@@ -104,16 +126,15 @@ namespace Silicon.Commands.Basic
             result = null;
             if (query.Name.EqualsIgnoreCase(arr[index]))
             {
+                result = query;
                 if (++index == arr.Length)
                 {
-                    result = query;
                     return true;
                 }
                 foreach (var sub in query.Submodules)
                 {
-                    if (TryFindModule(sub, arr, ref index, out var subResult))
+                    if (TryFindModule(sub, arr, ref index, out result))
                     {
-                        result = subResult;
                         return true;
                     }
                 }

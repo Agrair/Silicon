@@ -6,12 +6,12 @@ namespace Silicon.Services
 {
     public class UserService
     {
-        private readonly LiteDB.LiteCollection<UserConfig> collection;
+        private readonly LiteDB.LiteCollection<User> collection;
         private readonly TagService tags;
 
         public UserService(LiteDB.LiteDatabase db, TagService t)
         {
-            collection = db.GetCollection<UserConfig>("users");
+            collection = db.GetCollection<User>("users");
             tags = t;
         }
 
@@ -48,14 +48,14 @@ namespace Silicon.Services
             return result;
         }
 
-        private UserConfig EnsureUser(ulong id, out bool existed)
+        private User EnsureUser(ulong id, out bool existed)
         {
             existed = true;
             LiteDB.BsonValue docID = null;
             var value = collection.FindOne(x => x.Snowflake == id);
             if (value != null)
             {
-                docID = collection.Insert(new UserConfig(id));
+                docID = collection.Insert(new User(id));
                 collection.EnsureIndex(x => x.Snowflake);
                 existed = false;
                 countUpdated = true;

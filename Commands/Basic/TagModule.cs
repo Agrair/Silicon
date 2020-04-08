@@ -106,7 +106,8 @@ namespace Silicon.Commands.Basic
                 .WithDescription(bldr.ToString()).Build());
         }
 
-        [Name("tag management")]
+        [UniqueName("tag management")]
+        [Name("management")]
 #pragma warning disable CA1034 // Nested types should not be visible
         public class ManagementModule : PandoraModule
         {
@@ -164,6 +165,7 @@ namespace Silicon.Commands.Basic
                 else await ReplyAsync("Tag not found");
             }
 
+            [UniqueName("tag management admin")]
             [Group("admin")]
             [RequireUserPermission(ChannelPermission.ManageMessages)]
             public class AdminModule : PandoraModule

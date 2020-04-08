@@ -140,7 +140,7 @@ namespace Silicon.Services
                     string resultContent = await response.Content.ReadAsStringAsync();
 
                     var match = HastebinRegex.Match(resultContent);
-                    
+
                     if (!match.Success) return false;
 
                     string hasteUrl = $"{site}/{match.Groups["key"]}";
