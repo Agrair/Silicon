@@ -73,12 +73,7 @@ namespace Silicon
 
         public static string UniqueName(this ModuleInfo module)
         {
-            var attributes = module.GetType().GetCustomAttributes();
-            foreach (var attr in attributes)
-            {
-                if (attr is UniqueNameAttribute idAttribute) return idAttribute.id;
-            }
-            return module.Name;
+            return module.Remarks ?? module.Name;
         }
     }
 }

@@ -39,7 +39,8 @@ namespace Silicon.Services
                     Name = name,
                     Text = content,
                     Owner = owner.Id,
-                    Color = embedHue == default ? -1 : (int)embedHue.RawValue
+                    Color = embedHue == default ? -1 : (int)embedHue.RawValue,
+                    Claimed = true
                 });
                 collection.EnsureIndex(x => x.Owner);
                 collection.EnsureIndex(x => x.Name);

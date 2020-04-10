@@ -18,7 +18,7 @@ namespace Silicon.Commands.Basic
 
         [Name("~get")]
         [Command]
-        [Priority(-1)]
+        [Priority(-2)]
         [Summary("Gets a tag.")]
         public Task GetTag(string name)
         {
@@ -106,7 +106,7 @@ namespace Silicon.Commands.Basic
                 .WithDescription(bldr.ToString()).Build());
         }
 
-        [UniqueName("tag management")]
+        [Remarks("tag management")]
         [Name("management")]
 #pragma warning disable CA1034 // Nested types should not be visible
         public class ManagementModule : PandoraModule
@@ -165,7 +165,7 @@ namespace Silicon.Commands.Basic
                 else await ReplyAsync("Tag not found");
             }
 
-            [UniqueName("tag management admin")]
+            [Remarks("tag management admin")]
             [Group("admin")]
             [RequireUserPermission(ChannelPermission.ManageMessages)]
             public class AdminModule : PandoraModule

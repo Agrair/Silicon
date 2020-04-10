@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace Silicon.Models
 {
-    public class UserConfig
+    public class User
     {
-        public UserConfig(ulong id)
+        public User(ulong id)
         {
             Snowflake = id;
         }
