@@ -12,7 +12,7 @@ namespace Silicon.Commands.Basic
 {
     [Name("help")]
     [Ratelimit(5, 10)]
-    public class HelpModule : PandoraModule
+    public class HelpModule : SiliconModule
     {
         public CommandService Commands { get; set; }
         public IServiceProvider Services { get; set; }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace Silicon.Commands.Basic
 {
     [Name("default")]
-    public class DefaultModule : PandoraModule
+    public class DefaultModule : SiliconModule
     {
         [Command("ping")]
         [Summary("Gets response time for the bot")]

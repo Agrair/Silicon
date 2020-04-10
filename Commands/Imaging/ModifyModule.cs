@@ -9,7 +9,7 @@ namespace Silicon.Commands.Imaging
 {
     [Name("modify")]
     [Ratelimit(2, 5)]
-    public class ModifyModule : PandoraModule
+    public class ModifyModule : SiliconModule
     {
         [Command("invert", RunMode = RunMode.Async)]
         [Summary("Inverts someone's avatar.")]

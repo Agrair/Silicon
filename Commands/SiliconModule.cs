@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Silicon.Commands
 {
-    public abstract class PandoraModule : ModuleBase<SocketCommandContext>
+    public abstract class SiliconModule : ModuleBase<SocketCommandContext>
     {
         public InteractiveService Interactive { get; set; }
 

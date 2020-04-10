@@ -12,7 +12,7 @@ namespace Silicon.Commands.Basic
 {
     [Group("tag")]
     [Ratelimit(5, 5)]
-    public class TagModule : PandoraModule
+    public class TagModule : SiliconModule
     {
         public Services.TagService Tags { get; set; }
 
@@ -109,7 +109,7 @@ namespace Silicon.Commands.Basic
         [Remarks("tag management")]
         [Name("management")]
 #pragma warning disable CA1034 // Nested types should not be visible
-        public class ManagementModule : PandoraModule
+        public class ManagementModule : SiliconModule
         {
             public Services.TagService Tag { get; set; }
 
@@ -168,7 +168,7 @@ namespace Silicon.Commands.Basic
             [Remarks("tag management admin")]
             [Group("admin")]
             [RequireUserPermission(ChannelPermission.ManageMessages)]
-            public class AdminModule : PandoraModule
+            public class AdminModule : SiliconModule
             {
 #pragma warning restore CA1034 // Nested types should not be visible
                 public Services.TagService Tag { get; set; }

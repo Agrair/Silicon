@@ -12,7 +12,7 @@ namespace Silicon.Commands.Basic
 {
     [Group("net")]
     [Ratelimit(5, 10)]
-    public class NetModule : PandoraModule
+    public class NetModule : SiliconModule
     {
         private static readonly IYoutubeClient yt = new YoutubeClient();
         public InteractiveService Reaction { get; set; }

@@ -6,7 +6,7 @@ namespace Silicon.Commands.Basic
 {
     [RequireOwner]
     [Group("debug")]
-    public class AgrairModule : PandoraModule
+    public class AgrairModule : SiliconModule
     {
         public TextCrunchService Haste { get; set; }
 
