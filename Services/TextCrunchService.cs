@@ -121,7 +121,7 @@ namespace Silicon.Services
                             { "api_paste_name", "Quick Post by Silicon" },
                             { "api_dev_key", pastebinKey },
                             { "api_paste_code", hastebinContent },
-                            { "api_paste_expire_date", "30D" }
+                            { "api_paste_expire_date", "10D" }
                         };
                     client.UploadValuesCompleted += async (s, a) =>
                     {
@@ -166,7 +166,7 @@ namespace Silicon.Services
                 if (result.Status == IPStatus.Success) return "pastebin";
             }
             catch (PingException e) { Helpers.LoggingHelper.Log(LogSeverity.Warning, Models.Enums.LogSource.Service, null, e); }
-            catch (Exception e) { throw e; }
+
             return null;
         }
 

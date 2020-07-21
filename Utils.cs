@@ -1,11 +1,9 @@
 ﻿using Discord;
 using Discord.Commands;
-using Silicon.Commands.Commons;
 using Silicon.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Silicon
 {
