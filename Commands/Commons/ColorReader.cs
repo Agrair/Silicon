@@ -10,7 +10,7 @@ namespace Silicon.Commands.Commons
         public override Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
         {
             TypeReaderResult result = TypeReaderResult.FromError(CommandError.ParseFailed,
-                $"{input} is not a valid color.");
+                $"`{input}` is not a valid color.");
 
             if (TryUInt32(input, out uint color)) result = getResult(color);
             else if (TryHex(input, out color)) result = getResult(color);

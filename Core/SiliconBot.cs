@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Silicon.Services;
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Silicon.Core
@@ -14,6 +15,7 @@ namespace Silicon.Core
         private static readonly ServiceProvider _services = BuildServiceProvider();
         private readonly DiscordSocketClient _client = _services.GetRequiredService<DiscordSocketClient>();
         private readonly SiliconHandler _handler = _services.GetRequiredService<SiliconHandler>();
+        private readonly TriviaService _trivia = _services.GetRequiredService<TriviaService>();
 
         private static ServiceProvider BuildServiceProvider()
         {
@@ -34,6 +36,7 @@ namespace Silicon.Core
                     DefaultRunMode = RunMode.Sync
                 }))
 
+                //data services
                 .AddSingleton(new LiteDB.LiteDatabase("data.db"))
                 .AddSingleton<TagService>()
                 .AddSingleton<UserService>()
@@ -41,6 +44,10 @@ namespace Silicon.Core
                 //module services
                 .AddSingleton<TextCrunchService>()
                 .AddSingleton<InteractiveService>()
+
+                //other services
+                .AddSingleton<HttpClient>()
+                .AddSingleton<TriviaService>()
 
                 .AddSingleton<SiliconHandler>()
                 .BuildServiceProvider();
@@ -75,6 +82,12 @@ namespace Silicon.Core
                             case "--checkready":
                                 Console.WriteLine(SiliconHandler.Ready);
                                 break;
+                            case "-triviachannel":
+                                _trivia.SetChannel(_client.GetChannel(ulong.Parse(args[index++])) as SocketGuildChannel);
+                                break;
+                            case "-stoptrivia":
+                                _trivia.StopTrivia();
+                                break;
                             default:
                                 Console.WriteLine($"Unknown command `{cmd}`");
                                 break;
@@ -96,14 +109,9 @@ namespace Silicon.Core
             await _client.SetStatusAsync(UserStatus.Invisible);
             await _client.LogoutAsync();
             await _client.StopAsync();
-            Dispose();
+            _services.GetRequiredService<HttpClient>().Dispose();
+            _services.GetRequiredService<TextCrunchService>().Dispose();
             Environment.Exit(0);
-
-            static void Dispose()
-            {
-                foreach (var service in _services.GetServices<IDisposable>()) service.Dispose();
-                _services.Dispose();
-            }
         }
     }
 }

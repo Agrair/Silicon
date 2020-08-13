@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Silicon.Models.Enums;
 using System;
 using System.Collections.Specialized;
 using System.IO;
@@ -9,7 +10,6 @@ using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Silicon.Services
@@ -17,6 +17,9 @@ namespace Silicon.Services
     //https://github.com/tModLoader/tModLoader-Discord-Bot/blob/rework/Services/HastebinService.cs
     public class TextCrunchService : IDisposable
     {
+        private readonly HttpClient client;
+        private readonly WebClient wClient;
+
         private static readonly Regex HastebinRegex = new Regex(@"{""key"":""(?<key>[a-z].*)""}",
             RegexOptions.Compiled);
 
@@ -46,21 +49,12 @@ namespace Silicon.Services
 
         private readonly string pastebinKey = File.ReadAllText("D:/repos/pastekey.txt");
 
-        private readonly Timer offlineCheck;
         private string site;
 
         public TextCrunchService()
         {
             site = ChooseSite();
-            offlineCheck = new Timer(_ => OfflineCheck(), null,
-                TimeSpan.FromDays(1), TimeSpan.FromDays(1));
-        }
-
-        private void OfflineCheck()
-        {
-            site = ChooseSite();
-            if (site == null) offlineCheck.Change(TimeSpan.FromDays(1), TimeSpan.FromDays(1));
-            else offlineCheck.Change(-1, -1);
+            wClient = new WebClient();
         }
 
         public bool OfflineCheck(out string site)
@@ -69,7 +63,13 @@ namespace Silicon.Services
             return (site = this.site) != null;
         }
 
-        public async Task<bool> TryHaste(SocketUserMessage message)
+        private bool OfflineCheck()
+        {
+            site = ChooseSite();
+            return site != null;
+        }
+
+        public async Task TryHaste(SocketUserMessage message)
         {
             string contents = message.Content;
             bool shouldHastebin = false;
@@ -80,8 +80,7 @@ namespace Silicon.Services
             {
                 if (attachment.Filename.EndsWith(".log") && attachment.Size < 100000)
                 {
-                    using (var client = new HttpClient())
-                        contents = await client.GetStringAsync(attachment.Url);
+                    contents = await client.GetStringAsync(attachment.Url);
 
                     shouldHastebin = true;
                     extra = $" `({attachment.Filename})`";
@@ -89,15 +88,14 @@ namespace Silicon.Services
             }
 
             if (string.IsNullOrWhiteSpace(contents))
-                return false;
+                return;
 
             shouldHastebin = contents.Where(c => CodeKeyChars.Contains(c)).Count() > 6
                 && message.Content.Split('\n').Length >= 8;
 
             if (shouldHastebin)
             {
-                OfflineCheck();
-                if (site == null) return false;
+                if (!OfflineCheck()) return;
 
                 string hastebinContent = contents.Trim('`');
                 for (int i = 0; i < CodeBlockTypes.Length; i++)
@@ -114,7 +112,6 @@ namespace Silicon.Services
 
                 if (site == "pastebin")
                 {
-                    using WebClient client = new WebClient();
                     var data = new NameValueCollection
                         {
                             { "api_option", "paste" },
@@ -123,17 +120,16 @@ namespace Silicon.Services
                             { "api_paste_code", hastebinContent },
                             { "api_paste_expire_date", "10D" }
                         };
-                    client.UploadValuesCompleted += async (s, a) =>
+                    wClient.UploadValuesCompleted += async (s, a) =>
                     {
                         await msg.ModifyAsync(x => x.Content = $"Automatic Pastebin for {message.Author.Username}" +
                             $"{extra}: <{Encoding.UTF8.GetString(a.Result)}>");
                     };
-                    client.UploadValuesAsync(new Uri("https://pastebin.com/api/api_post.php"), data);
+                    wClient.UploadValuesAsync(new Uri("https://pastebin.com/api/api_post.php"), data);
                 }
 
                 else
                 {
-                    using var client = new HttpClient();
                     HttpContent content = new StringContent(hastebinContent);
 
                     var response = await client.PostAsync(site + "/documents", content);
@@ -141,16 +137,15 @@ namespace Silicon.Services
 
                     var match = HastebinRegex.Match(resultContent);
 
-                    if (!match.Success) return false;
+                    if (!match.Success) return;
 
                     string hasteUrl = $"{site}/{match.Groups["key"]}";
                     await msg.ModifyAsync(x => x.Content = $"Automatic Hastebin for {message.Author.Username}" +
                         $"{extra}: {hasteUrl}");
                 }
                 await message.DeleteAsync();
-                return true;
+                await Helpers.LoggingHelper.Log(LogSeverity.Verbose, LogSource.Silicon, $"Hasted message {msg.Id} by {msg.Author.Id} in {msg.Channel.Id}");
             }
-            return false;
         }
 
         private string ChooseSite()
@@ -165,38 +160,14 @@ namespace Silicon.Services
                 result = ping.Send("pastebin.com");
                 if (result.Status == IPStatus.Success) return "pastebin";
             }
-            catch (PingException e) { Helpers.LoggingHelper.Log(LogSeverity.Warning, Models.Enums.LogSource.Service, null, e); }
+            catch (PingException e) { Helpers.LoggingHelper.Log(LogSeverity.Warning, LogSource.Service, null, e); }
 
             return null;
         }
 
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    offlineCheck.Dispose();
-                }
-
-                // free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // set large fields to null.
-
-                disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-            // uncomment the following line if the finalizer is overridden.
-            // GC.SuppressFinalize(this);
+            wClient.Dispose();
         }
-        #endregion
     }
 }

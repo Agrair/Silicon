@@ -21,8 +21,8 @@ namespace Silicon.Core
         private readonly CommandService _commandService;
 
         private readonly UserService _user;
-
         private readonly TextCrunchService _text;
+        private readonly TriviaService _trivia;
 
         public static bool Ready { get; set; }
 
@@ -34,8 +34,8 @@ namespace Silicon.Core
             _commandService = services.GetRequiredService<CommandService>();
 
             _user = services.GetRequiredService<UserService>();
-
             _text = services.GetRequiredService<TextCrunchService>();
+            _trivia = services.GetRequiredService<TriviaService>();
         }
 
         public async Task StartAsync()
@@ -81,15 +81,23 @@ namespace Silicon.Core
             if (msg.Author.IsBot || msg.Author.IsWebhook) return;
 
             int argPos = 0;
-            if (msg.Content.Length <= 2) return;
-            if (msg.HasMentionPrefix(_client.CurrentUser, ref argPos) || msg.HasStringPrefix("s|", ref argPos))
+            if (msg.Content.Length > 2 
+                && (msg.HasMentionPrefix(_client.CurrentUser, ref argPos) 
+                || msg.HasStringPrefix("s|", ref argPos)))
             {
                 var context = new SocketCommandContext(_client, msg);
 
                 await _commandService.ExecuteAsync(context, argPos, services);
             }
-            else if (await _text.TryHaste(msg))
-                _ = LoggingHelper.Log(LogSeverity.Verbose, LogSource.Silicon, $"Hasted message {msg.Id} by {msg.Author.Id} in {msg.Channel.Id}");
+            else if (_trivia.Channel?.Id == s.Channel.Id)
+            {
+                if (await _trivia.CheckAnswer(msg))
+                {
+                    await msg.Channel.SendMessageAsync("Correct!");
+                }
+            }
+            else
+                _ = _text.TryHaste(msg);
         }
 
         private async Task CommandExecuted(Optional<CommandInfo> cmd, ICommandContext context, IResult result)

@@ -46,7 +46,7 @@ namespace Silicon.Services
                 collection.EnsureIndex(x => x.Name);
                 collection.EnsureIndex(x => x.Text);
 
-                shouldUpdatelist = true;
+                shouldUpdateList = true;
             }
         }
 
@@ -68,12 +68,12 @@ namespace Silicon.Services
         }
 
         private List<Tag> tags;
-        private bool shouldUpdatelist = true;
+        private bool shouldUpdateList = true;
         public List<Tag> Tags
         {
             get
             {
-                if (shouldUpdatelist) { tags = collection.FindAll().ToList(); shouldUpdatelist = false; }
+                if (shouldUpdateList) { tags = collection.FindAll().ToList(); shouldUpdateList = false; }
                 return tags;
             }
         }
@@ -85,7 +85,7 @@ namespace Silicon.Services
                 phrase.Claimed = false;
                 collection.Update(phrase);
             }
-            shouldUpdatelist = true;
+            shouldUpdateList = true;
         }
 
         public bool TryTransfer(SocketUser user, string name, SocketGuildUser newOwner)

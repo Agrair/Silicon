@@ -4,6 +4,7 @@ using Silicon.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 
 namespace Silicon
 {
@@ -73,5 +74,7 @@ namespace Silicon
         {
             return module.Remarks ?? module.Name;
         }
+
+        public static string DecodeHtml(this string str) => HttpUtility.HtmlDecode(str);
     }
 }

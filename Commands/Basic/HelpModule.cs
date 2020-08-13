@@ -174,7 +174,7 @@ namespace Silicon.Commands.Basic
         {
             name = command.Name.Bold();
             text = $"{command.Summary ?? "No summary available"}\n{remarks(command)}{aliases(command)}" +
-                $"**Usage:** `|{GetPrefix(command)} {GetParams(command)}`";
+                $"**Usage:** `s|{GetPrefix(command)} {GetParams(command)}`";
 
             static string remarks(CommandInfo command)
             {
