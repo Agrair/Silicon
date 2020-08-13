@@ -61,6 +61,31 @@ namespace Silicon.Core
             string cmd = Console.ReadLine();
             while (cmd != "stop")
             {
+                var args = cmd.Split(' ');
+                int index = 0;
+                try
+                {
+                    do
+                    {
+                        switch (args[index++])
+                        {
+                            case "-setready":
+                                SiliconHandler.Ready = bool.Parse(args[index++]);
+                                break;
+                            case "--checkready":
+                                Console.WriteLine(SiliconHandler.Ready);
+                                break;
+                            default:
+                                Console.WriteLine($"Unknown command `{cmd}`");
+                                break;
+                        }
+                    }
+                    while (index < args.Length);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
                 cmd = Console.ReadLine();
             }
             await ShutdownAsync();

@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Silicon
 {
-    static class Utils
+    public static class Utils
     {
         public static T Clamp<T>(this T value, T min, T max) where T : IComparable
         {

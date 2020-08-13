@@ -24,7 +24,7 @@ namespace Silicon.Core
 
         private readonly TextCrunchService _text;
 
-        public static bool Ready { get; private set; }
+        public static bool Ready { get; set; }
 
         public SiliconHandler(IServiceProvider services)
         {
@@ -84,7 +84,6 @@ namespace Silicon.Core
             if (msg.Content.Length <= 2) return;
             if (msg.HasMentionPrefix(_client.CurrentUser, ref argPos) || msg.HasStringPrefix("s|", ref argPos))
             {
-                //TODO: check for proper channel
                 var context = new SocketCommandContext(_client, msg);
 
                 await _commandService.ExecuteAsync(context, argPos, services);
@@ -99,7 +98,7 @@ namespace Silicon.Core
             {
                 await context.Channel.SendMessageAsync(result.ErrorReason);
                 await LoggingHelper.Log(LogSeverity.Warning, LogSource.Module, result.ErrorReason,
-                    result is ExecuteResult ? ((ExecuteResult)result).Exception : null);
+                    result is ExecuteResult execResult ? execResult.Exception : null);
             }
         }
     }

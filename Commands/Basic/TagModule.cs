@@ -24,11 +24,6 @@ namespace Silicon.Commands.Basic
         {
             if (Tags.TryGetTag(name, Context.User, out Tag value))
             {
-#if MULTIGUILD
-                if (Context.Guild.GetUser(value.Owner) == null) 
-                    return ReplyAsync($"Tag not found for user {Context.User}.");
-#endif
-
                 var builder = new EmbedBuilder()
                     .WithDescription(value.Text)
                     .WithTitle(name);
@@ -49,11 +44,6 @@ namespace Silicon.Commands.Basic
         {
             if (Tags.TryGetTag(name, user, out Tag value))
             {
-#if MULTIGUILD
-                if (Context.Guild.GetUser(value.Owner) == null)
-                    return ReplyAsync($"Tag not found for user {Context.User}.");
-#endif
-
                 var builder = new EmbedBuilder()
                     .WithDescription(value.Text)
                     .WithTitle(name);
@@ -133,9 +123,9 @@ namespace Silicon.Commands.Basic
 
             [Command("claim")]
             [Summary("Claims a tag without an owner.")]
-            public async Task Claim(string name)
+            public async Task Claim(SocketGuildUser prevOwner, string name)
             {
-                if (Tag.TryClaim(Context.User, name))
+                if (Tag.TryClaim(prevOwner, name))
                 {
                     await ReplyAsync("Successfully claimed tag.");
                 }

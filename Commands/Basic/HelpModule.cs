@@ -2,6 +2,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Silicon.Commands.Commons;
+using Silicon.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace Silicon.Commands.Basic
     [Ratelimit(5, 10)]
     public class HelpModule : SiliconModule
     {
+        public InteractiveService Interactive { get; set; }
+
         public CommandService Commands { get; set; }
         public IServiceProvider Services { get; set; }
 
@@ -142,7 +145,7 @@ namespace Silicon.Commands.Basic
             return false;
         }
 
-        public string GetSubmodules(ModuleInfo module)
+        private string GetSubmodules(ModuleInfo module)
         {
             var submodules = module.Submodules.Where(x => QualifiedCommands(x).Count() > 0);
             return module.Submodules.Any()
@@ -151,11 +154,12 @@ namespace Silicon.Commands.Basic
                 : "";
         }
 
-        public IReadOnlyList<CommandInfo> QualifiedCommands(ModuleInfo module) => (Context.IsPrivate
+        private IReadOnlyList<CommandInfo> QualifiedCommands(ModuleInfo module) => (Context.IsPrivate
                 ? module.Commands
                 : module.GetExecutableCommandsAsync(Context, Services).GetAwaiter().GetResult())
                 .Where(x => x.Module.Name.EqualsIgnoreCase(module.Name)).ToList();
 
+        /*
         public void GetCommands(ModuleInfo module, ref EmbedBuilder builder)
         {
             foreach (var command in QualifiedCommands(module))
@@ -164,8 +168,9 @@ namespace Silicon.Commands.Basic
                 builder.AddField(name, text);
             }
         }
+        */
 
-        public void GetCommand(CommandInfo command, out string name, out string text)
+        private void GetCommand(CommandInfo command, out string name, out string text)
         {
             name = command.Name.Bold();
             text = $"{command.Summary ?? "No summary available"}\n{remarks(command)}{aliases(command)}" +
@@ -184,7 +189,7 @@ namespace Silicon.Commands.Basic
             }
         }
 
-        public static string GetParams(CommandInfo command)
+        private static string GetParams(CommandInfo command)
         {
             StringBuilder output = new StringBuilder();
             if (!command.Parameters.Any()) return output.ToString();
@@ -202,14 +207,14 @@ namespace Silicon.Commands.Basic
             return output.ToString();
         }
 
-        public static string GetPrefix(CommandInfo command)
+        private static string GetPrefix(CommandInfo command)
         {
             var output = GetPrefix(command.Module);
             output += command.Aliases.FirstOrDefault();
             return output;
         }
 
-        public static string GetPrefix(ModuleInfo module)
+        private static string GetPrefix(ModuleInfo module)
         {
             string output = "";
             if (module.Parent != null) output = $"{GetPrefix(module.Parent)}{output}";

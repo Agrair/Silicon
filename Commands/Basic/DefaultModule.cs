@@ -20,6 +20,7 @@ namespace Silicon.Commands.Basic
         }
 
         [Command("source")]
+        [Alias("src")]
         [Summary("Gets this bot's source code")]
         public Task Source() => ReplyAsync("https://github.com/Agrair/Silicon");
 
