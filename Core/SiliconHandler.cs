@@ -93,7 +93,7 @@ namespace Silicon.Core
             {
                 if (await _trivia.CheckAnswer(msg))
                 {
-                    await msg.Channel.SendMessageAsync("Correct!");
+                    await msg.Channel.SendMessageAsync(embed: _trivia.GetEmbed(msg.Author).Build());
                 }
             }
             else

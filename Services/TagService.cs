@@ -30,6 +30,7 @@ namespace Silicon.Services
             if (InternalGetTag(name, owner) is Tag phrase)
             {
                 phrase.Text = content;
+                phrase.Color = embedHue == default ? -1 : (int)embedHue.RawValue;
                 collection.Update(phrase);
             }
             else

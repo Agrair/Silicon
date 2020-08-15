@@ -76,5 +76,7 @@ namespace Silicon
         }
 
         public static string DecodeHtml(this string str) => HttpUtility.HtmlDecode(str);
+
+        public static string FullName(this IUser user) => $"{user.Username}#{user.Discriminator}";
     }
 }

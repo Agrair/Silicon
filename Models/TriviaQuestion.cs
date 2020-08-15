@@ -18,5 +18,8 @@ namespace Silicon.Models
 
         [JsonProperty("difficulty")]
         public string Difficulty { get; set; }
+
+        [JsonProperty("type")]
+        public string Type { get; set; }
     }
 }

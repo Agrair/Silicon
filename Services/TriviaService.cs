@@ -21,10 +21,13 @@ namespace Silicon.Services
         private string dbToken;
         private readonly Timer _timer;
 
-        private char correctAnswer;
+        private int correct;
+        private string title;
+        private string[] choices;
+        private DateTimeOffset timeOfQuestion;
         private readonly Stack<TriviaQuestion> questions;
-
-        private readonly Dictionary<byte, char> numbersToLetters;
+       
+        private static readonly char[] letters = { 'A', 'B', 'C', 'D' };
 
         public TriviaService(HttpClient http)
         {
@@ -37,24 +40,42 @@ namespace Silicon.Services
                     await GetQAAsync();
                 }
                 var q = questions.Pop();
-                var builder = new EmbedBuilder();
-                builder.WithTitle($"{q.Category.ToUpper()}, difficulty: {q.Difficulty.ToUpper()}");
-                builder.WithDescription(q.Question.DecodeHtml());
+                var builder = new EmbedBuilder()
+                    .WithTitle(title = $"{q.Category.ToUpper()}, difficulty: {q.Difficulty.ToUpper()}")
+                    .WithDescription(q.Question.DecodeHtml());
                 var choices = new List<string>(q.FalseAnswers);
-                var index = (byte)_rand.Next(0, choices.Count);
-                choices.Insert(index, q.Answer);
-                correctAnswer = numbersToLetters[index];
+                if (q.Type == "multiple")
+                {
+                    var index = (byte)_rand.Next(0, choices.Count);
+                    choices.Insert(index, q.Answer);
+                    correct = index;
+                }
+                else
+                {
+                    if (q.FalseAnswers[0] == "True")
+                    {
+                        correct = 1;
+                        choices.Add("False");
+                    }
+                    else
+                    {
+                        correct = 0;
+                        choices.Insert(correct, "True");
+                    }
+                }
+                this.choices = choices.ToArray();
                 for (byte i = 0; i < choices.Count; i++)
                 {
                     string choice = choices[i];
                     builder.AddField(new EmbedFieldBuilder()
-                        .WithName(Convert.ToString(numbersToLetters[i]))
+                        .WithName(Convert.ToString(letters[i]))
                         .WithValue(choice.DecodeHtml()));
                 }
                 builder.WithFooter("Made with `opentdb.com`");
                 if (Channel is ISocketMessageChannel msgChannel)
                 {
                     await msgChannel.SendMessageAsync(embed: builder.Build());
+                    timeOfQuestion = DateTimeOffset.Now;
                 }
                 await Channel.AddPermissionOverwriteAsync(Channel.Guild.EveryoneRole,
                     OverwritePermissions.InheritAll.Modify(sendMessages: PermValue.Allow));
@@ -63,13 +84,6 @@ namespace Silicon.Services
 
             dbToken = RequestToken();
             questions = new Stack<TriviaQuestion>();
-            numbersToLetters = new Dictionary<byte, char>
-            {
-                { 0, 'A' },
-                { 1, 'B' },
-                { 2, 'C' },
-                { 3, 'D' }
-            };
         }
 
         public void SetChannel(SocketGuildChannel channel)
@@ -120,7 +134,9 @@ namespace Silicon.Services
         private static readonly IEmote wrong = new Emoji("👎");
         public async Task<bool> CheckAnswer(SocketUserMessage msg)
         {
-            if (msg.Content[0].ToString().EqualsIgnoreCase(correctAnswer.ToString()))
+            var content = msg.Content;
+            if (content.EqualsIgnoreCase(choices[correct])
+                || (content.Length == 1 && Array.IndexOf(letters, content.ToUpper()[0]) == correct))
             {
                 await Channel.AddPermissionOverwriteAsync(Channel.Guild.EveryoneRole,
                     OverwritePermissions.InheritAll.Modify(sendMessages: PermValue.Deny));
@@ -132,6 +148,15 @@ namespace Silicon.Services
                 await msg.AddReactionAsync(wrong);
                 return false;
             }
+        }
+
+        public EmbedBuilder GetEmbed(IUser user)
+        {
+            return new EmbedBuilder()
+                .WithTitle(title)
+                .WithDescription("Correct!")
+                .WithFooter($"Answered by {user.FullName()} in {DateTimeOffset.Now.Subtract(timeOfQuestion)}",
+                    user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
         }
     }
 }

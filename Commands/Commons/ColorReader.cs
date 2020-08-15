@@ -21,30 +21,23 @@ namespace Silicon.Commands.Commons
             static TypeReaderResult getResult(uint color) => TypeReaderResult.FromSuccess(new Color(color));
         }
 
-        static uint CapResult(uint v)
+        private bool TryUInt32(string input, out uint color, uint cap = 0xFFFFFF)
         {
-            if (v > 0xFFFFFF) return 0xFFFFFF;
-            return v;
-        }
-
-        private bool TryUInt32(string input, out uint color)
-        {
-            color = 0;
-            if (uint.TryParse(input, out uint value))
+            if (uint.TryParse(input, out color))
             {
-                if (value > 0xFFFFFF) value = 0xFFFFFF;
-                color = CapResult(value);
+                if (color > cap) color = cap;
                 return true;
             }
             return false;
         }
 
-        private bool TryHex(string input, out uint color)
+        private bool TryHex(string input, out uint color, uint cap = 0xFFFFFF)
         {
             color = 0;
             try
             {
-                color = CapResult(Convert.ToUInt32(input, 16));
+                color = Convert.ToUInt32(input, 16);
+                if (color > cap) color = cap;
                 return true;
             }
             catch { return false; }
@@ -60,11 +53,11 @@ namespace Silicon.Commands.Commons
             var rgb = new uint[3];
             for (int i = 0; i < split.Length; i++)
             {
-                if (TryUInt32(split[i], out uint value)) rgb[i] = value;
-                else if (TryHex(split[i], out value)) rgb[i] = value;
+                if (TryUInt32(split[i], out uint value, 255)) rgb[i] = value;
+                else if (TryHex(split[i], out value, 255)) rgb[i] = value;
                 else return false;
             }
-            color = new Color(rgb[0], rgb[1], rgb[2]).RawValue;
+            color = new Color(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255).RawValue;
             return true;
         }
     }

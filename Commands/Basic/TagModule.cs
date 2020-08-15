@@ -16,33 +16,14 @@ namespace Silicon.Commands.Basic
     {
         public Services.TagService Tags { get; set; }
 
-        [Name("~get")]
-        [Command]
-        [Priority(-2)]
-        [Summary("Gets a tag.")]
-        public Task GetTag(string name)
-        {
-            if (Tags.TryGetTag(name, Context.User, out Tag value))
-            {
-                var builder = new EmbedBuilder()
-                    .WithDescription(value.Text)
-                    .WithTitle(name);
-                if (value.Color != -1) builder.WithColor(new Color((uint)value.Color));
-                if (value.Claimed) builder.WithAuthor(Context.Client.GetUser(value.Owner));
-                return ReplyAsync(builder.Build());
-            }
-            return FindTags(name);
-        }
-
         //TODO: tag edit
 
         [Name("~get")]
         [Command]
-        [Priority(-1)]
         [Summary("Gets a tag.")]
-        public Task GetTag(string name, SocketGuildUser user)
+        public Task GetTag(string name, SocketGuildUser user = null)
         {
-            if (Tags.TryGetTag(name, user, out Tag value))
+            if (Tags.TryGetTag(name, user ?? Context.User, out Tag value))
             {
                 var builder = new EmbedBuilder()
                     .WithDescription(value.Text)

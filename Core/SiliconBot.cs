@@ -85,7 +85,7 @@ namespace Silicon.Core
                             case "-triviachannel":
                                 _trivia.SetChannel(_client.GetChannel(ulong.Parse(args[index++])) as SocketGuildChannel);
                                 break;
-                            case "-stoptrivia":
+                            case "--stoptrivia":
                                 _trivia.StopTrivia();
                                 break;
                             default:
