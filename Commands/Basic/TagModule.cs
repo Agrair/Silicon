@@ -48,7 +48,7 @@ namespace Silicon.Commands.Basic
                 {
                     Tag tag = list[i];
                     bldr.AppendLine($"{i + 1}. {Context.Client.GetUser(tag.Owner).Mention}: {tag.Name} " +
-                        $"`|tag {tag.Name}{(tag.Claimed ? "" : " (Unclaimed)")} {tag.Owner}`");
+                        $"`s|tag {tag.Name}{(tag.Claimed ? "" : " (Unclaimed)")} {tag.Owner}`");
                 }
                 return ReplyAsync(new EmbedBuilder()
                     .WithTitle($"Showing {count}/{list.Count} tags")
@@ -70,7 +70,7 @@ namespace Silicon.Commands.Basic
             {
                 Tag tag = Tags.Tags[i];
                 bldr.AppendLine($"{i + 1}. {Context.Client.GetUser(tag.Owner).Mention}: {tag.Name} " +
-                    $"`|tag {tag.Name}{(tag.Claimed ? "" : " (Unclaimed)")} {tag.Owner}`");
+                    $"`s|tag {tag.Name}{(tag.Claimed ? "" : " (Unclaimed)")} {tag.Owner}`");
             }
             return ReplyAsync(new EmbedBuilder()
                 .WithTitle($"Page {page + 1}/{pageCount}")
