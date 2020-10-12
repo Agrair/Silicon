@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Silicon.Models
+﻿namespace Silicon.Models
 {
-    public class User
+    public class User : LiteDBPoco
     {
         public User(ulong id)
         {
             Snowflake = id;
+            //TimeSlots = new Dictionary<string, DateTimeOffset>();
         }
-
-        public int Id { get; set; }
 
         public ulong Snowflake { get; set; }
 
-        public Dictionary<string, DateTimeOffset> TimeSlots { get; set; } = new Dictionary<string, DateTimeOffset>();
+        //public Dictionary<string, DateTimeOffset> TimeSlots { get; set; }
     }
 }

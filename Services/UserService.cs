@@ -19,9 +19,9 @@ namespace Silicon.Services
         {
             collection.Delete(x => x.Snowflake == id);
             tags.UnclaimPhrases(id);
-            shouldUpdateCount = true;
         }
 
+        /*
         public bool LockTimeslot(ulong id,
             TimeSpan cooldown,
             string timeslot,
@@ -47,31 +47,32 @@ namespace Silicon.Services
             collection.Update(user);
             return result;
         }
+        */
 
         public User EnsureUser(ulong id, out bool existed)
         {
-            existed = true;
-            LiteDB.BsonValue docID = null;
-            var value = collection.FindOne(x => x.Snowflake == id);
-            if (value != null)
+            if (collection.FindOne(x => x.Snowflake == id) is User value)
             {
-                docID = collection.Insert(new User(id));
-                collection.EnsureIndex(x => x.Snowflake);
                 existed = false;
-                shouldUpdateCount = true;
+                return value;
             }
-            return existed ? value : collection.FindById(docID);
+
+            collection.Insert(value = new User(id));
+            collection.EnsureIndex(x => x.Snowflake);
+
+            existed = false;
+            return value;
         }
 
-        private int userCount;
-        private bool shouldUpdateCount = true;
-        public int UserCount
+        public bool TryGetUser(ulong id, out User user)
         {
-            get
-            {
-                if (shouldUpdateCount) { userCount = collection.Count() - 1; shouldUpdateCount = false; }
-                return userCount;
-            }
+            return (user = collection.FindOne(x => x.Snowflake == id)) != null;
+        }
+
+        public void AddUser(ulong id)
+        {
+            collection.Insert(new User(id));
+            collection.EnsureIndex(x => x.Snowflake, true);
         }
     }
 }

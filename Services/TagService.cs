@@ -44,7 +44,7 @@ namespace Silicon.Services
                     Claimed = true
                 });
                 collection.EnsureIndex(x => x.Owner);
-                collection.EnsureIndex(x => x.Name);
+                collection.EnsureIndex(x => x.Name, true);
                 collection.EnsureIndex(x => x.Text);
 
                 shouldUpdateList = true;
@@ -53,10 +53,9 @@ namespace Silicon.Services
 
         private Tag InternalGetTag(string name, IUser owner, bool serverWide = false)
         {
-            var result = collection.FindOne(x => x.Owner == owner.Id
-                && x.Name.EqualsIgnoreCase(name));
-            if (serverWide && result == null) result = collection.FindOne(x => x.Name.EqualsIgnoreCase(name));
-            return result;
+            var results = collection.Find(x => x.Name.EqualsIgnoreCase(name));
+            if (!serverWide) results = results.Where(x => x.Owner == owner.Id);
+            return results.FirstOrDefault();
         }
 
         public bool TryRemoveTag(string name, IUser user) =>

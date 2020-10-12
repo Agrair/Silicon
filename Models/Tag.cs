@@ -1,9 +1,7 @@
 ﻿namespace Silicon.Models
 {
-    public class Tag
+    public class Tag : LiteDBPoco
     {
-        public int Id { get; set; }
-
         public string Name { get; set; }
 
         public string Text { get; set; }
