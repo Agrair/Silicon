@@ -16,87 +16,53 @@ namespace Silicon.Services
         private readonly HttpClient _client;
         private readonly Random _rand;
 
-        public SocketGuildChannel Channel { get; private set; }
+        private readonly Dictionary<ulong, TriviaGame> _games;
 
         private string dbToken;
-        private readonly Timer _timer;
 
         private int correct;
         private string title;
         private string[] choices;
         private DateTimeOffset timeOfQuestion;
-        private readonly Stack<TriviaQuestion> questions;
+        private readonly Stack<TriviaQuestion> _questions;
        
-        private static readonly char[] letters = { 'A', 'B', 'C', 'D' };
+        private static readonly char[] _letters = { 'A', 'B', 'C', 'D' };
 
         public TriviaService(HttpClient http)
         {
             _client = http;
             _rand = new Random();
-            _timer = new Timer(async _ =>
-            {
-                if (questions.Count == 0)
-                {
-                    await GetQAAsync();
-                }
-                var q = questions.Pop();
-                var builder = new EmbedBuilder()
-                    .WithTitle(title = $"{q.Category.ToUpper()}, difficulty: {q.Difficulty.ToUpper()}")
-                    .WithDescription(q.Question.DecodeHtml());
-                var choices = new List<string>(q.FalseAnswers);
-                if (q.Type == "multiple")
-                {
-                    var index = (byte)_rand.Next(0, choices.Count);
-                    choices.Insert(index, q.Answer);
-                    correct = index;
-                }
-                else
-                {
-                    if (q.FalseAnswers[0] == "True")
-                    {
-                        correct = 1;
-                        choices.Add("False");
-                    }
-                    else
-                    {
-                        correct = 0;
-                        choices.Insert(correct, "True");
-                    }
-                }
-                this.choices = choices.ToArray();
-                for (byte i = 0; i < choices.Count; i++)
-                {
-                    string choice = choices[i];
-                    builder.AddField(new EmbedFieldBuilder()
-                        .WithName(Convert.ToString(letters[i]))
-                        .WithValue(choice.DecodeHtml()));
-                }
-                builder.WithFooter("Made with `opentdb.com`");
-                if (Channel is ISocketMessageChannel msgChannel)
-                {
-                    await msgChannel.SendMessageAsync(embed: builder.Build());
-                    timeOfQuestion = DateTimeOffset.Now;
-                }
-                await Channel.AddPermissionOverwriteAsync(Channel.Guild.EveryoneRole,
-                    OverwritePermissions.InheritAll.Modify(sendMessages: PermValue.Allow));
-                _timer.Change(-1, -1);
-            }, null, -1, -1);
 
             dbToken = RequestToken();
-            questions = new Stack<TriviaQuestion>();
+            _questions = new Stack<TriviaQuestion>();
+            _games = new Dictionary<ulong, TriviaGame>();
         }
 
-        public void SetChannel(SocketGuildChannel channel)
+
+        public void SetChannel(ulong guild, SocketGuildChannel channel)
         {
-            Channel = channel;
-            _timer.Change(1_000, -1);
+            if (_games.TryGetValue(guild, out var game))
+            {
+                game.Channel = channel;
+                game.Timer.Change(1_000, -1);
+            }
+            else
+            {
+                game = new TriviaGame(channel, new Timer(TimerCallback, game, 15_000, Timeout.Infinite));
+                _games.Add(guild, game);
+            }
         }
 
-        public void StopTrivia()
+        public bool StopTrivia(ulong guild)
         {
-            Channel = null;
-            _timer.Change(-1, -1);
+            if (_games.TryGetValue(guild, out var game))
+                return false;
+
+            game.Timer.Dispose();
+            _games.Remove(guild);
+            return true;
         }
+
 
         private string RequestToken()
         {
@@ -121,7 +87,7 @@ namespace Silicon.Services
             var jArr = JArray.Parse(jObj["results"].ToString());
             foreach (var result in jArr)
             {
-                questions.Push(JsonConvert.DeserializeObject<TriviaQuestion>(result.ToString()));
+                _questions.Push(JsonConvert.DeserializeObject<TriviaQuestion>(result.ToString()));
             }
 
             async Task<string> GetContent()
@@ -131,18 +97,27 @@ namespace Silicon.Services
             }
         }
 
+
         private static readonly IEmote wrong = new Emoji("👎");
         public async Task<bool> CheckAnswer(SocketUserMessage msg)
         {
+            var guild = (msg.Author as SocketGuildUser).Guild;
+            if (!_games.TryGetValue(guild.Id, out var game) || msg.Channel.Id != game.Channel.Id)
+                return false;
+
             var content = msg.Content;
             if (content.EqualsIgnoreCase(choices[correct])
-                || (content.Length == 1 && Array.IndexOf(letters, content.ToUpper()[0]) == correct))
+                || (content.Length == 1 && Array.IndexOf(_letters, content.ToUpper()[0]) == correct))
             {
-                await Channel.AddPermissionOverwriteAsync(Channel.Guild.EveryoneRole,
+                var channel = msg.Channel as SocketGuildChannel;
+                await channel.AddPermissionOverwriteAsync(guild.EveryoneRole,
                     OverwritePermissions.InheritAll.Modify(sendMessages: PermValue.Deny));
-                _timer.Change(15_000, -1);
+                game.Timer.Change(15_000, -1);
+
+                await msg.Channel.SendMessageAsync(embed: GetEmbed(msg.Author).Build());
                 return true;
             }
+
             else
             {
                 await msg.AddReactionAsync(wrong);
@@ -150,7 +125,57 @@ namespace Silicon.Services
             }
         }
 
-        public EmbedBuilder GetEmbed(IUser user)
+        private async void TimerCallback(object? state)
+        {
+            var (channel, timer) = (state as TriviaGame).AsTuple;
+
+            if (_questions.Count == 0)
+            {
+                await GetQAAsync();
+            }
+            var q = _questions.Pop();
+            var builder = new EmbedBuilder()
+                .WithTitle(title = $"{q.Category.ToUpper()}, difficulty: {q.Difficulty.ToUpper()}")
+                .WithDescription(q.Question.DecodeHtml());
+            var choices = new List<string>(q.FalseAnswers);
+            if (q.Type == "multiple")
+            {
+                var index = (byte)_rand.Next(0, choices.Count);
+                choices.Insert(index, q.Answer);
+                correct = index;
+            }
+            else
+            {
+                if (q.FalseAnswers[0] == "True")
+                {
+                    correct = 1;
+                    choices.Add("False");
+                }
+                else
+                {
+                    correct = 0;
+                    choices.Insert(correct, "True");
+                }
+            }
+            this.choices = choices.ToArray();
+            for (byte i = 0; i < choices.Count; i++)
+            {
+                string choice = choices[i];
+                builder.AddField(new EmbedFieldBuilder()
+                    .WithName(Convert.ToString(_letters[i]))
+                    .WithValue(choice.DecodeHtml()));
+            }
+            builder.WithFooter("Made with `opentdb.com`");
+
+            await (channel as ISocketMessageChannel).SendMessageAsync(embed: builder.Build());
+            timeOfQuestion = DateTimeOffset.Now;
+            await channel.AddPermissionOverwriteAsync(channel.Guild.EveryoneRole,
+                OverwritePermissions.InheritAll.Modify(sendMessages: PermValue.Allow));
+
+            timer.Change(-1, -1);
+        }
+
+        private EmbedBuilder GetEmbed(IUser user)
         {
             return new EmbedBuilder()
                 .WithTitle(title)

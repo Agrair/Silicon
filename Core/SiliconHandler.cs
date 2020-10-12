@@ -81,22 +81,16 @@ namespace Silicon.Core
             if (msg.Author.IsBot || msg.Author.IsWebhook) return;
 
             int argPos = 0;
-            if (msg.Content.Length > 2 
-                && (msg.HasMentionPrefix(_client.CurrentUser, ref argPos) 
+            if (msg.Content.Length > 2
+                && (msg.HasMentionPrefix(_client.CurrentUser, ref argPos)
                 || msg.HasStringPrefix("s|", ref argPos)))
             {
                 var context = new SocketCommandContext(_client, msg);
 
                 await _commandService.ExecuteAsync(context, argPos, services);
             }
-            else if (_trivia.Channel?.Id == s.Channel.Id)
-            {
-                if (await _trivia.CheckAnswer(msg))
-                {
-                    await msg.Channel.SendMessageAsync(embed: _trivia.GetEmbed(msg.Author).Build());
-                }
-            }
-            else
+
+            if (!await _trivia.CheckAnswer(msg))
                 _ = _text.TryHaste(msg);
         }
 

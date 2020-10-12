@@ -15,7 +15,6 @@ namespace Silicon.Core
         private static readonly ServiceProvider _services = BuildServiceProvider();
         private readonly DiscordSocketClient _client = _services.GetRequiredService<DiscordSocketClient>();
         private readonly SiliconHandler _handler = _services.GetRequiredService<SiliconHandler>();
-        private readonly TriviaService _trivia = _services.GetRequiredService<TriviaService>();
 
         private static ServiceProvider BuildServiceProvider()
         {
@@ -82,12 +81,6 @@ namespace Silicon.Core
                             case "--checkready":
                                 Console.WriteLine(SiliconHandler.Ready);
                                 break;
-                            case "-triviachannel":
-                                _trivia.SetChannel(_client.GetChannel(ulong.Parse(args[index++])) as SocketGuildChannel);
-                                break;
-                            case "--stoptrivia":
-                                _trivia.StopTrivia();
-                                break;
                             default:
                                 Console.WriteLine($"Unknown command `{cmd}`");
                                 break;
@@ -106,8 +99,6 @@ namespace Silicon.Core
 
         private async Task ShutdownAsync()
         {
-            await _client.SetStatusAsync(UserStatus.Invisible);
-            await _client.LogoutAsync();
             await _client.StopAsync();
             _services.GetRequiredService<HttpClient>().Dispose();
             _services.GetRequiredService<TextCrunchService>().Dispose();
