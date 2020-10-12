@@ -18,7 +18,6 @@ namespace Silicon.Services
     public class TextCrunchService : IDisposable
     {
         private readonly HttpClient client;
-        private readonly WebClient wClient;
 
         private static readonly Regex HastebinRegex = new Regex(@"{""key"":""(?<key>[a-z].*)""}",
             RegexOptions.Compiled);
@@ -47,14 +46,11 @@ namespace Silicon.Services
             ')',
         };
 
-        private readonly string pastebinKey = File.ReadAllText("D:/repos/pastekey.txt");
-
         private string site;
 
         public TextCrunchService()
         {
             site = ChooseSite();
-            wClient = new WebClient();
         }
 
         public bool OfflineCheck(out string site)
@@ -110,26 +106,6 @@ namespace Silicon.Services
 
                 var msg = await message.Channel.SendMessageAsync("Text-crunching in progress...");
 
-                if (site == "pastebin")
-                {
-                    var data = new NameValueCollection
-                        {
-                            { "api_option", "paste" },
-                            { "api_paste_name", "Quick Post by Silicon" },
-                            { "api_dev_key", pastebinKey },
-                            { "api_paste_code", hastebinContent },
-                            { "api_paste_expire_date", "10D" }
-                        };
-                    wClient.UploadValuesCompleted += async (s, a) =>
-                    {
-                        await msg.ModifyAsync(x => x.Content = $"Automatic Pastebin for {message.Author.Username}" +
-                            $"{extra}: <{Encoding.UTF8.GetString(a.Result)}>");
-                    };
-                    wClient.UploadValuesAsync(new Uri("https://pastebin.com/api/api_post.php"), data);
-                }
-
-                else
-                {
                     HttpContent content = new StringContent(hastebinContent);
 
                     var response = await client.PostAsync(site + "/documents", content);
@@ -142,7 +118,7 @@ namespace Silicon.Services
                     string hasteUrl = $"{site}/{match.Groups["key"]}";
                     await msg.ModifyAsync(x => x.Content = $"Automatic Hastebin for {message.Author.Username}" +
                         $"{extra}: {hasteUrl}");
-                }
+
                 await message.DeleteAsync();
                 await Helpers.LoggingHelper.Log(LogSeverity.Verbose, LogSource.Silicon, $"Hasted message {msg.Id} by {msg.Author.Id} in {msg.Channel.Id}");
             }
@@ -157,8 +133,6 @@ namespace Silicon.Services
                 if (result.Status == IPStatus.Success) return "https://paste.mod.gg";
                 result = ping.Send("hastebin.com");
                 if (result.Status == IPStatus.Success) return "https://hastebin.com";
-                result = ping.Send("pastebin.com");
-                if (result.Status == IPStatus.Success) return "pastebin";
             }
             catch (PingException e) { Helpers.LoggingHelper.Log(LogSeverity.Warning, LogSource.Service, null, e); }
 
@@ -167,7 +141,7 @@ namespace Silicon.Services
 
         public void Dispose()
         {
-            wClient.Dispose();
+            client?.Dispose();
         }
     }
 }
