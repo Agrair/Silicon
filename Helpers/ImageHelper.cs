@@ -8,11 +8,11 @@ namespace Silicon.Helpers
     {
         public static Stream Invert(Stream stream)
         {
-            var image = Image.FromStream(stream);
+            using var image = Image.FromStream(stream);
             using var map = new Bitmap(image);
-            for (int x = 0; x < map.Width; x++)
+            for (int x = 0; x < image.Width; x++)
             {
-                for (int y = 0; y < map.Height; y++)
+                for (int y = 0; y < image.Height; y++)
                 {
                     Color col = map.GetPixel(x, y);
                     map.SetPixel(x, y, Color.FromArgb(255 - col.R, 255 - col.G, 255 - col.B));

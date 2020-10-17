@@ -44,9 +44,11 @@ namespace Silicon.Commands.Basic
             var builder = new EmbedBuilder()
                 .WithTitle($"{user.Nickname ?? user.Username}#{user.Discriminator} ({(user.IsBot ? "Bot" : "User")}) {(user.IsMuted ? "(Muted)" : "")} Info - Silicon")
                 .WithFooter(user.Status.ToString());
-            if (user.JoinedAt.HasValue) builder.AddField("Joined at", user.JoinedAt?.ToUniversalTime());
+            if (user.JoinedAt.HasValue)
+                builder.AddField("Joined at", user.JoinedAt?.ToUniversalTime());
             builder.AddField("Using Discord since", user.CreatedAt.ToUniversalTime());
-            if (user.VoiceChannel != null) builder.AddField("Voice channel", user.VoiceChannel.Name);
+            if (user.VoiceChannel != null)
+                builder.AddField("Voice channel", user.VoiceChannel.Name);
             builder.AddField("Role count", user.Roles.Count);
             builder.AddField("Guild hierarchy pos", user.Hierarchy);
             builder.WithImageUrl(user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
@@ -64,7 +66,8 @@ namespace Silicon.Commands.Basic
                 modules = new Dictionary<string, string>();
                 foreach (var module in Commands.Modules)
                 {
-                    if (module.Parent != null) continue;
+                    if (module.Parent != null)
+                        continue;
                     DescribeFullModule(module);
                 }
             }
@@ -96,14 +99,16 @@ namespace Silicon.Commands.Basic
         private void DescribeFullModule(ModuleInfo module)
         {
             modules.Add(module.UniqueName(), DescribeSingleModule(module));
-            foreach (var sub in module.Submodules) DescribeFullModule(sub);
+            foreach (var sub in module.Submodules)
+                DescribeFullModule(sub);
         }
 
         private string DescribeSingleModule(ModuleInfo module)
         {
             var builder = new StringBuilder();
             var commands = QualifiedCommands(module);
-            if (commands.Count == 0) return null;
+            if (commands.Count == 0)
+                return null;
             builder.AppendLine(module.Name.ToUpper().Bold());
             builder.AppendLine(prefixes(module) + GetSubmodules(module));
             foreach (var cmd in commands)
@@ -192,7 +197,8 @@ namespace Silicon.Commands.Basic
         private static string GetParams(CommandInfo command)
         {
             StringBuilder output = new StringBuilder();
-            if (!command.Parameters.Any()) return output.ToString();
+            if (!command.Parameters.Any())
+                return output.ToString();
             foreach (var param in command.Parameters)
             {
                 if (param.IsOptional)
@@ -217,7 +223,8 @@ namespace Silicon.Commands.Basic
         private static string GetPrefix(ModuleInfo module)
         {
             string output = "";
-            if (module.Parent != null) output = $"{GetPrefix(module.Parent)}{output}";
+            if (module.Parent != null)
+                output = $"{GetPrefix(module.Parent)}{output}";
             return output;
         }
     }

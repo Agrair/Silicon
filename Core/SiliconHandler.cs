@@ -62,7 +62,8 @@ namespace Silicon.Core
 
         private Task ClientUserLeft(SocketGuildUser user)
         {
-            if (user.MutualGuilds.Count == 0) _user.RemoveUser(user.Id);
+            if (user.MutualGuilds.Count == 0)
+                _user.RemoveUser(user.Id);
             return Task.CompletedTask;
         }
 
@@ -76,9 +77,12 @@ namespace Silicon.Core
 
         private async Task ClientMessageReceieved(SocketMessage s)
         {
-            if (!Ready) return;
-            if (!(s is SocketUserMessage msg)) return;
-            if (msg.Author.IsBot || msg.Author.IsWebhook) return;
+            if (!Ready)
+                return;
+            if (!(s is SocketUserMessage msg))
+                return;
+            if (msg.Author.IsBot || msg.Author.IsWebhook)
+                return;
 
             int argPos = 0;
             if (msg.Content.Length > 2

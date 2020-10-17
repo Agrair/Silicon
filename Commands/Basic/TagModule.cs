@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Silicon.Commands.Commons;
@@ -28,8 +28,10 @@ namespace Silicon.Commands.Basic
                 var builder = new EmbedBuilder()
                     .WithDescription(value.Text)
                     .WithTitle(name);
-                if (value.Color != -1) builder.WithColor(new Color((uint)value.Color));
-                if (value.Claimed) builder.WithAuthor(Context.Client.GetUser(value.Owner));
+                if (value.Color != -1)
+                    builder.WithColor(new Color((uint)value.Color));
+                if (value.Claimed)
+                    builder.WithAuthor(Context.Client.GetUser(value.Owner));
                 return ReplyAsync(builder.Build());
             }
             return ReplyAsync($"Tag not found for {user}.");
@@ -54,7 +56,8 @@ namespace Silicon.Commands.Basic
                     .WithTitle($"Showing {count}/{list.Count} tags")
                     .WithDescription(bldr.ToString()).Build());
             }
-            else return ReplyAsync("No tags found.");
+            else
+                return ReplyAsync("No tags found.");
         }
 
         [Command("list")]
@@ -133,7 +136,8 @@ namespace Silicon.Commands.Basic
                 {
                     await ReplyAsync("Successfully removed tag.");
                 }
-                else await ReplyAsync("Tag not found");
+                else
+                    await ReplyAsync("Tag not found");
             }
 
             [Remarks("tag management admin")]
@@ -162,7 +166,8 @@ namespace Silicon.Commands.Basic
                     {
                         await ReplyAsync("Successfully removed tag.");
                     }
-                    else await ReplyAsync("Tag not found.");
+                    else
+                        await ReplyAsync("Tag not found.");
                 }
             }
         }

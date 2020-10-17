@@ -25,7 +25,7 @@ namespace Silicon.Services
         private string[] choices;
         private DateTimeOffset timeOfQuestion;
         private readonly Stack<TriviaQuestion> _questions;
-       
+
         private static readonly char[] _letters = { 'A', 'B', 'C', 'D' };
 
         public TriviaService(HttpClient http)

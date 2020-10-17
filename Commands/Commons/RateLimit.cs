@@ -14,17 +14,14 @@ namespace Silicon.Commands.Commons
         //move to a faster model like skip list
         private readonly List<ulong> warned = new List<ulong>();
 
-        public RatelimitAttribute(
-            uint times,
-            double period)
+        public RatelimitAttribute(uint times, double period)
         {
             invokeLimit = times;
 
             invokePeriod = TimeSpan.FromSeconds(period);
         }
 
-        public override Task<PreconditionResult> CheckPermissionsAsync(
-            ICommandContext context,
+        public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context,
             CommandInfo command,
             IServiceProvider services)
         {
@@ -36,9 +33,7 @@ namespace Silicon.Commands.Commons
             //var timeout = (tracker.TryGetValue(user, out var t)
             //    && ((now - t.FirstInvoke) < invokePeriod))
             //        ? t : new CommandTimeout(now);
-            CommandTimeout timeout = null;
-            if (tracker.TryGetValue(user, out var t) && (now - t.FirstInvoke) < invokePeriod) timeout = t;
-            else
+            if (!tracker.TryGetValue(user, out CommandTimeout timeout) || (now - timeout.FirstInvoke) >= invokePeriod)
             {
                 timeout = new CommandTimeout(now);
                 warned.Remove(user);
@@ -59,6 +54,7 @@ namespace Silicon.Commands.Commons
         private sealed class CommandTimeout
         {
             public uint TimesInvoked { get; set; }
+
             public DateTimeOffset FirstInvoke { get; }
 
             public CommandTimeout(DateTimeOffset timeStarted)

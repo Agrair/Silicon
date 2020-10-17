@@ -87,7 +87,8 @@ namespace Silicon.Services
 
             if (shouldHastebin)
             {
-                if (!OfflineCheck()) return;
+                if (!OfflineCheck())
+                    return;
 
                 string hastebinContent = contents.Trim('`');
                 for (int i = 0; i < CodeBlockTypes.Length; i++)
@@ -102,18 +103,19 @@ namespace Silicon.Services
 
                 var msg = await message.Channel.SendMessageAsync("Text-crunching in progress...");
 
-                    HttpContent content = new StringContent(hastebinContent);
+                HttpContent content = new StringContent(hastebinContent);
 
-                    var response = await client.PostAsync(site + "/documents", content);
-                    string resultContent = await response.Content.ReadAsStringAsync();
+                var response = await client.PostAsync(site + "/documents", content);
+                string resultContent = await response.Content.ReadAsStringAsync();
 
-                    var match = HastebinRegex.Match(resultContent);
+                var match = HastebinRegex.Match(resultContent);
 
-                    if (!match.Success) return;
+                if (!match.Success)
+                    return;
 
-                    string hasteUrl = $"{site}/{match.Groups["key"]}";
-                    await msg.ModifyAsync(x => x.Content = $"Automatic Hastebin for {message.Author.Username}" +
-                        $"{extra}: {hasteUrl}");
+                string hasteUrl = $"{site}/{match.Groups["key"]}";
+                await msg.ModifyAsync(x => x.Content = $"Automatic Hastebin for {message.Author.Username}" +
+                    $"{extra}: {hasteUrl}");
 
                 await message.DeleteAsync();
                 await Helpers.LoggingHelper.Log(LogSeverity.Verbose, LogSource.Silicon, $"Hasted message {msg.Id} by {msg.Author.Id} in {msg.Channel.Id}");
@@ -126,9 +128,11 @@ namespace Silicon.Services
             {
                 using var ping = new Ping();
                 var result = ping.Send("paste.mod.gg");
-                if (result.Status == IPStatus.Success) return "https://paste.mod.gg";
+                if (result.Status == IPStatus.Success)
+                    return "https://paste.mod.gg";
                 result = ping.Send("hastebin.com");
-                if (result.Status == IPStatus.Success) return "https://hastebin.com";
+                if (result.Status == IPStatus.Success)
+                    return "https://hastebin.com";
             }
             catch (PingException e) { Helpers.LoggingHelper.Log(LogSeverity.Warning, LogSource.Service, null, e); }
 

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using LiteDB;
 using Silicon.Models;
 using System;
 using System.Collections.Generic;
@@ -9,9 +10,9 @@ namespace Silicon.Services
 {
     public class TagService
     {
-        private readonly LiteDB.LiteCollection<Tag> collection;
+        private readonly ILiteCollection<Tag> collection;
 
-        public TagService(LiteDB.LiteDatabase db) => collection = db.GetCollection<Tag>("tags");
+        public TagService(LiteDatabase db) => collection = db.GetCollection<Tag>("tags");
 
         public bool TryGetTag(string name, IUser owner, out Tag value)
             => !((value = InternalGetTag(name, owner, true)) is null);
@@ -51,15 +52,21 @@ namespace Silicon.Services
             }
         }
 
-        private Tag InternalGetTag(string name, IUser owner, bool serverWide = false)
+        private Tag InternalGetTag(string name, IUser owner, bool anyOwner = false)
         {
             var results = collection.Find(x => x.Name.EqualsIgnoreCase(name));
-            if (!serverWide) results = results.Where(x => x.Owner == owner.Id);
+            if (!anyOwner)
+                results = results.Where(x => x.Owner == owner.Id);
             return results.FirstOrDefault();
         }
 
-        public bool TryRemoveTag(string name, IUser user) =>
-            collection.Delete(x => x.Name == name && x.Owner == user.Id) != 0;
+        public bool TryRemoveTag(string name, IUser user)
+        {
+            if (!(collection.FindOne(x => x.Name == name && x.Owner == user.Id) is Tag found))
+                return false;
+
+            return collection.Delete(found.Id);
+        }
 
         public bool TryFindTag(string search, out List<Tag> value)
         {
@@ -73,7 +80,11 @@ namespace Silicon.Services
         {
             get
             {
-                if (shouldUpdateList) { tags = collection.FindAll().ToList(); shouldUpdateList = false; }
+                if (shouldUpdateList)
+                {
+                    tags = collection.FindAll().ToList();
+                    shouldUpdateList = false;
+                }
                 return tags;
             }
         }

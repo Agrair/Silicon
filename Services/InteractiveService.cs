@@ -37,7 +37,8 @@ namespace Silicon.Services
 
             Task Handler(SocketMessage message)
             {
-                if (judge(message)) eventTrigger.SetResult(message);
+                if (judge(message))
+                    eventTrigger.SetResult(message);
                 return Task.CompletedTask;
             }
 
@@ -64,9 +65,12 @@ namespace Silicon.Services
             ISocketMessageChannel channel,
             SocketReaction reaction)
         {
-            if (reaction.UserId == _client.CurrentUser.Id) return;
-            if (!reactions.TryGetValue(message.Id, out var callback)) return;
-            if (!callback.Judge(reaction)) return;
+            if (reaction.UserId == _client.CurrentUser.Id)
+                return;
+            if (!reactions.TryGetValue(message.Id, out var callback))
+                return;
+            if (!callback.Judge(reaction))
+                return;
             if (callback.Async)
             {
                 _ = Task.Run(async () =>

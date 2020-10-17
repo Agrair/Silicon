@@ -1,15 +1,14 @@
-﻿using Silicon.Models;
-using System;
-using System.Threading.Tasks;
+﻿using LiteDB;
+using Silicon.Models;
 
 namespace Silicon.Services
 {
     public class UserService
     {
-        private readonly LiteDB.LiteCollection<User> collection;
+        private readonly ILiteCollection<User> collection;
         private readonly TagService tags;
 
-        public UserService(LiteDB.LiteDatabase db, TagService t)
+        public UserService(LiteDatabase db, TagService t)
         {
             collection = db.GetCollection<User>("users");
             tags = t;
@@ -17,7 +16,10 @@ namespace Silicon.Services
 
         public void RemoveUser(ulong id)
         {
-            collection.Delete(x => x.Snowflake == id);
+            if (!(collection.FindOne(x => x.Snowflake == id) is User found))
+                return;
+
+            collection.Delete(found.Id);
             tags.UnclaimPhrases(id);
         }
 

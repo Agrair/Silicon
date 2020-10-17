@@ -12,9 +12,12 @@ namespace Silicon.Commands.Commons
             TypeReaderResult result = TypeReaderResult.FromError(CommandError.ParseFailed,
                 $"`{input}` is not a valid color.");
 
-            if (TryUInt32(input, out uint color)) result = getResult(color);
-            else if (TryHex(input, out color)) result = getResult(color);
-            else if (TryRGB(input, out color)) result = getResult(color);
+            if (TryUInt32(input, out uint color))
+                result = getResult(color);
+            else if (TryHex(input, out color))
+                result = getResult(color);
+            else if (TryRGB(input, out color))
+                result = getResult(color);
 
             return Task.FromResult(result);
 
@@ -25,7 +28,8 @@ namespace Silicon.Commands.Commons
         {
             if (uint.TryParse(input, out color))
             {
-                if (color > cap) color = cap;
+                if (color > cap)
+                    color = cap;
                 return true;
             }
             return false;
@@ -37,7 +41,8 @@ namespace Silicon.Commands.Commons
             try
             {
                 color = Convert.ToUInt32(input, 16);
-                if (color > cap) color = cap;
+                if (color > cap)
+                    color = cap;
                 return true;
             }
             catch { return false; }
@@ -47,15 +52,20 @@ namespace Silicon.Commands.Commons
         {
             color = 0;
             var split = input.Split(',', ':');
-            if (split.Length != 3) return false;
+            if (split.Length != 3)
+                return false;
             var trimmed = new string[3];
-            for (int i = 0; i < split.Length; i++) trimmed[i] = split[i].Trim();
+            for (int i = 0; i < split.Length; i++)
+                trimmed[i] = split[i].Trim();
             var rgb = new uint[3];
             for (int i = 0; i < split.Length; i++)
             {
-                if (TryUInt32(split[i], out uint value, 255)) rgb[i] = value;
-                else if (TryHex(split[i], out value, 255)) rgb[i] = value;
-                else return false;
+                if (TryUInt32(split[i], out uint value, 255))
+                    rgb[i] = value;
+                else if (TryHex(split[i], out value, 255))
+                    rgb[i] = value;
+                else
+                    return false;
             }
             color = new Color(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255).RawValue;
             return true;

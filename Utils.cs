@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using LiteDB;
 using Silicon.Models.Enums;
 using System;
 using System.Collections.Generic;
@@ -12,8 +13,10 @@ namespace Silicon
     {
         public static T Clamp<T>(this T value, T min, T max) where T : IComparable
         {
-            if (value.CompareTo(min) == -1) return min;
-            if (value.CompareTo(max) == 1) return max;
+            if (value.CompareTo(min) == -1)
+                return min;
+            if (value.CompareTo(max) == 1)
+                return max;
             return value;
         }
 
