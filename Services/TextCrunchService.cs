@@ -49,17 +49,13 @@ namespace Silicon.Services
             site = ChooseSite();
         }
 
-        public bool OfflineCheck(out string site)
-        {
-            OfflineCheck();
-            return (site = this.site) != null;
-        }
 
         private bool OfflineCheck()
         {
             site = ChooseSite();
             return site != null;
         }
+
 
         public async Task TryHaste(SocketUserMessage message)
         {

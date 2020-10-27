@@ -45,7 +45,7 @@ namespace Silicon.Services
                     Claimed = true
                 });
                 collection.EnsureIndex(x => x.Owner);
-                collection.EnsureIndex(x => x.Name, true);
+                collection.EnsureIndex(x => x.Name);
                 collection.EnsureIndex(x => x.Text);
 
                 shouldUpdateList = true;
@@ -68,15 +68,12 @@ namespace Silicon.Services
             return collection.Delete(found.Id);
         }
 
-        public bool TryFindTag(string search, out List<Tag> value)
-        {
-            return (value = collection.Find(x => (x.Name + x.Text).ContainsIgnoreCase(search))
-                .ToList()).Count != 0;
-        }
+        public bool TryFindTag(string search, out IReadOnlyList<Tag> value) =>
+            (value = collection.Find(x => (x.Name + x.Text).ContainsIgnoreCase(search)).ToList()).Count != 0;
 
-        private List<Tag> tags;
+        private IReadOnlyList<Tag> tags;
         private bool shouldUpdateList = true;
-        public List<Tag> Tags
+        public IReadOnlyList<Tag> Tags
         {
             get
             {
@@ -102,26 +99,26 @@ namespace Silicon.Services
         public bool TryTransfer(SocketUser user, string name, SocketGuildUser newOwner)
         {
             var phrase = InternalGetTag(name, user);
-            if (phrase != null)
-            {
-                phrase.Owner = newOwner.Id;
-                collection.Update(phrase);
-                return true;
-            }
-            return false;
+            if (phrase is null)
+                return false;
+
+            phrase.Owner = newOwner.Id;
+            collection.Update(phrase);
+
+            return true;
         }
 
         public bool TryClaim(SocketUser user, string name)
         {
             var phrase = InternalGetTag(name, user);
-            if (phrase != null && !phrase.Claimed)
-            {
-                phrase.Owner = user.Id;
-                phrase.Claimed = true;
-                collection.Update(phrase);
-                return true;
-            }
-            return false;
+            if (phrase is null || phrase.Claimed)
+                return false;
+
+            phrase.Owner = user.Id;
+            phrase.Claimed = true;
+            collection.Update(phrase);
+
+            return true;
         }
     }
 }

@@ -11,8 +11,6 @@ namespace Silicon.Models.Callbacks
 
         public SocketCommandContext FirstContext { get; }
 
-        public bool Async => false;
-
         protected ReactionCallback(SocketCommandContext context)
         {
             FirstContext = context;

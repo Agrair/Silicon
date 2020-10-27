@@ -71,19 +71,9 @@ namespace Silicon.Services
                 return;
             if (!callback.Judge(reaction))
                 return;
-            if (callback.Async)
-            {
-                _ = Task.Run(async () =>
-                {
-                    if (await callback.ExecuteAsync(reaction))
-                        RemoveReactionCallback(message.Id);
-                });
-            }
-            else
-            {
-                if (await callback.ExecuteAsync(reaction))
-                    RemoveReactionCallback(message.Id);
-            }
+
+            if (await callback.ExecuteAsync(reaction))
+                RemoveReactionCallback(message.Id);
         }
     }
 }
