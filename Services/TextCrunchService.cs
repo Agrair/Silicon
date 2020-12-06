@@ -44,13 +44,14 @@ namespace Silicon.Services
 
         private string site;
 
-        public TextCrunchService()
+        public TextCrunchService(HttpClient client)
         {
+            this.client = client;
             site = ChooseSite();
         }
 
 
-        private bool OfflineCheck()
+        public bool OfflineCheck()
         {
             site = ChooseSite();
             return site != null;

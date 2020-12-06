@@ -1,10 +1,12 @@
 ﻿using Discord.Commands;
+using Silicon.Commands.Commons;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Silicon.Commands.Basic
 {
     [Name("default")]
+    [Ratelimit(10, 10)]
     public class DefaultModule : SiliconModule
     {
         [Command("ping")]

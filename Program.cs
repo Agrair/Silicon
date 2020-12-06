@@ -12,6 +12,6 @@ namespace Silicon
             "e21fb266ba7c9bc07304af5d9f24dea1.png";
         */
 
-        public static void Main() => Core.SiliconBot.StartAsync().GetAwaiter().GetResult();
+        public static void Main() => new Core.SiliconBot().LoginAsync().GetAwaiter().GetResult();
     }
 }

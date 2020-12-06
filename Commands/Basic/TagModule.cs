@@ -42,7 +42,7 @@ namespace Silicon.Commands.Basic
         [Summary("Searches for a tag containing the follow text.")]
         public Task FindTags([Remainder] string search)
         {
-            if (Tags.TryFindTag(search, out List<Tag> list))
+            if (Tags.TryFindTag(search, out var list))
             {
                 int count = list.Count.Clamp(0, 10);
                 var bldr = new StringBuilder();

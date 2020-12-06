@@ -39,22 +39,20 @@ namespace Silicon.Core
                 .AddSingleton(new LiteDB.LiteDatabase("data.db"))
                 .AddSingleton<TagService>()
                 .AddSingleton<UserService>()
+                .AddSingleton<HttpClient>()
 
                 //module services
                 .AddSingleton<TextCrunchService>()
                 .AddSingleton<InteractiveService>()
 
                 //other services
-                .AddSingleton<HttpClient>()
                 .AddSingleton<TriviaService>()
 
                 .AddSingleton<SiliconHandler>()
                 .BuildServiceProvider();
         }
 
-        public static Task StartAsync() => new SiliconBot().LoginAsync();
-
-        private async Task LoginAsync()
+        public async Task LoginAsync()
         {
             Console.Title = "Silicon";
 
@@ -100,8 +98,7 @@ namespace Silicon.Core
         private async Task ShutdownAsync()
         {
             await _client.StopAsync();
-            _services.GetRequiredService<HttpClient>().Dispose();
-            _services.GetRequiredService<TextCrunchService>().Dispose();
+            _services.Dispose();
             Environment.Exit(0);
         }
     }
