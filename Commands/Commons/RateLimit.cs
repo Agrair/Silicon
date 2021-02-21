@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,8 +11,8 @@ namespace Silicon.Commands.Commons
     {
         private readonly uint invokeLimit;
         private readonly TimeSpan invokePeriod;
-        private readonly Dictionary<ulong, CommandTimeout> tracker = new Dictionary<ulong, CommandTimeout>();
-        //move to a faster model like skip list
+        private readonly ConcurrentDictionary<ulong, CommandTimeout> tracker = new ConcurrentDictionary<ulong, CommandTimeout>();
+        //TODO: move to a faster model like skip list
         private readonly List<ulong> warned = new List<ulong>();
 
         public RatelimitAttribute(uint times, double period)
@@ -30,9 +31,6 @@ namespace Silicon.Commands.Commons
             var now = DateTimeOffset.UtcNow;
             var user = context.User.Id;
 
-            //var timeout = (tracker.TryGetValue(user, out var t)
-            //    && ((now - t.FirstInvoke) < invokePeriod))
-            //        ? t : new CommandTimeout(now);
             if (!tracker.TryGetValue(user, out CommandTimeout timeout) || (now - timeout.FirstInvoke) >= invokePeriod)
             {
                 timeout = new CommandTimeout(now);
@@ -48,6 +46,7 @@ namespace Silicon.Commands.Commons
                 result = PreconditionResult.FromError($"You're going too fast!");
                 warned.Add(user);
             }
+
             return Task.FromResult(result);
         }
 
