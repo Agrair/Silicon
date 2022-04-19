@@ -1,20 +1,21 @@
 ﻿using Discord.WebSocket;
+using System;
 using System.Threading;
 
 namespace Silicon.Models
 {
     public class TriviaGame
     {
-        public SocketGuildChannel Channel { get; set; }
+        public SocketTextChannel Channel { get; set; }
 
-        public Timer Timer { get; }
+        public Timer Timer { get; set; }
 
-        public (SocketGuildChannel, Timer) AsTuple => (Channel, Timer);
+        public int Correct { get; set; }
 
-        public TriviaGame(SocketGuildChannel channel, Timer timer)
-        {
-            Channel = channel;
-            Timer = timer;
-        }
+        public string Title { get; set; }
+
+        public string[] Choices { get; set; }
+
+        public DateTimeOffset Timestamp { get; set; }
     }
 }

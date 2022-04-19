@@ -1,5 +1,5 @@
-﻿using Discord.Commands;
-using Discord.WebSocket;
+﻿using Discord;
+using Discord.Commands;
 using Silicon.Commands.Commons;
 using Silicon.Helpers;
 using System.Net.Http;
@@ -16,10 +16,10 @@ namespace Silicon.Commands.Imaging
         [Command("invert", RunMode = RunMode.Async)]
         [Summary("Inverts someone's avatar.")]
         [Priority(1)]
-        public Task Invert(SocketGuildUser user = null)
+        public Task Invert(IUser user = null)
         {
-            var guildUser = user ?? (Context.User as SocketGuildUser);
-            return Invert(guildUser.GetAvatarUrl() ?? guildUser.GetDefaultAvatarUrl());
+            var person = user ?? Context.User;
+            return Invert(person.GetAvatarUrl() ?? person.GetDefaultAvatarUrl());
         }
 
         [Command("invert", RunMode = RunMode.Async)]

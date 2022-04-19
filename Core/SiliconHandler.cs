@@ -94,8 +94,9 @@ namespace Silicon.Core
                 await _commandService.ExecuteAsync(context, argPos, services);
             }
 
-            if (!await _trivia.CheckAnswer(msg))
-                _ = _text.TryHaste(msg);
+            await _trivia.CheckAnswer(msg);
+
+            _ = _text.TryHaste(msg);
         }
 
         private async Task CommandExecuted(Optional<CommandInfo> cmd, ICommandContext context, IResult result)

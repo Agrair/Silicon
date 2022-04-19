@@ -44,9 +44,8 @@ namespace Silicon.Core
                 //module services
                 .AddSingleton<TextCrunchService>()
                 .AddSingleton<InteractiveService>()
-
-                //other services
                 .AddSingleton<TriviaService>()
+                .AddSingleton<PollService>()
 
                 .AddSingleton<SiliconHandler>()
                 .BuildServiceProvider();

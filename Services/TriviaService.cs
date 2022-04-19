@@ -4,7 +4,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Silicon.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,14 +18,10 @@ namespace Silicon.Services
         private readonly HttpClient _client;
         private readonly Random _rand;
 
-        private readonly Dictionary<ulong, TriviaGame> _games;
+        private readonly ConcurrentDictionary<ulong, TriviaGame> _games;
 
         private string dbToken;
 
-        private int correct;
-        private string title;
-        private string[] choices;
-        private DateTimeOffset timeOfQuestion;
         private readonly Stack<TriviaQuestion> _questions;
 
         private static readonly char[] _letters = { 'A', 'B', 'C', 'D' };
@@ -35,11 +33,11 @@ namespace Silicon.Services
 
             dbToken = RequestToken();
             _questions = new Stack<TriviaQuestion>();
-            _games = new Dictionary<ulong, TriviaGame>();
+            _games = new ConcurrentDictionary<ulong, TriviaGame>();
         }
 
 
-        public void SetChannel(ulong guild, SocketGuildChannel channel)
+        public void SetChannel(ulong guild, SocketTextChannel channel)
         {
             if (_games.TryGetValue(guild, out var game))
             {
@@ -48,19 +46,24 @@ namespace Silicon.Services
             }
             else
             {
-                game = new TriviaGame(channel, new Timer(TimerCallback, game, 15_000, Timeout.Infinite));
-                _games.Add(guild, game);
+                game = new TriviaGame {
+                    Channel = channel
+                };
+
+                game.Timer = new Timer(PostQuestion, game, 2_000, Timeout.Infinite);
+
+                _games.TryAdd(guild, game);
             }
         }
 
         public bool StopTrivia(ulong guild)
         {
-            if (_games.TryGetValue(guild, out var game))
-                return false;
+            if (_games.TryRemove(guild, out var game)) {
+                game.Timer.Dispose();
+                return true;
+            }
 
-            game.Timer.Dispose();
-            _games.Remove(guild);
-            return true;
+            return false;
         }
 
 
@@ -74,13 +77,13 @@ namespace Silicon.Services
 
         private async Task GetQAAsync()
         {
-            var content = await GetContent();
+            var content = await GetContent(dbToken);
             var jObj = JObject.Parse(content);
 
             if (jObj["response_code"].ToString() == "4")
             {
                 dbToken = RequestToken();
-                content = await GetContent();
+                content = await GetContent(dbToken);
                 jObj = JObject.Parse(content);
             }
 
@@ -90,44 +93,50 @@ namespace Silicon.Services
                 _questions.Push(JsonConvert.DeserializeObject<TriviaQuestion>(result.ToString()));
             }
 
-            async Task<string> GetContent()
+            Task<string> GetContent(string token)
             {
-                return await (await _client.GetAsync($"https://opentdb.com/api.php?amount=10&token={dbToken}"))
-                    .Content.ReadAsStringAsync();
+                return _client.GetStringAsync($"https://opentdb.com/api.php?amount=10&token={token}");
             }
         }
 
 
         private static readonly IEmote wrong = new Emoji("👎");
-        public async Task<bool> CheckAnswer(SocketUserMessage msg)
+        public async Task CheckAnswer(SocketUserMessage msg)
         {
-            var guild = (msg.Author as SocketGuildUser).Guild;
-            if (!_games.TryGetValue(guild.Id, out var game) || msg.Channel.Id != game.Channel.Id)
-                return false;
+            if (!(msg.Author is SocketGuildUser user))
+                return;
 
-            var content = msg.Content;
-            if (content.EqualsIgnoreCase(choices[correct])
-                || (content.Length == 1 && Array.IndexOf(_letters, content.ToUpper()[0]) == correct))
+            if (!_games.TryGetValue(user.Guild.Id, out var game) || msg.Channel.Id != game.Channel.Id)
+                return;
+
+            var content = msg.Content.ToLower();
+            if (content.EqualsIgnoreCase(game.Choices[game.Correct])
+                || (content.Length == 1 && Array.IndexOf(_letters, content.ToUpper()[0]) == game.Correct))
             {
-                var channel = msg.Channel as SocketGuildChannel;
-                await channel.AddPermissionOverwriteAsync(guild.EveryoneRole,
+                await game.Channel.AddPermissionOverwriteAsync(user.Guild.EveryoneRole,
                     OverwritePermissions.InheritAll.Modify(sendMessages: PermValue.Deny));
                 game.Timer.Change(15_000, -1);
 
-                await msg.Channel.SendMessageAsync(embed: GetEmbed(msg.Author).Build());
-                return true;
+                await game.Channel.SendMessageAsync(embed: GetEmbed(msg.Author).Build());
             }
 
             else
             {
                 await msg.AddReactionAsync(wrong);
-                return false;
+            }
+
+            EmbedBuilder GetEmbed(IUser user) {
+                return new EmbedBuilder()
+                    .WithTitle(game.Title)
+                    .WithDescription("Correct!")
+                    .WithFooter($"Answered by {user.FullName()} in {DateTimeOffset.Now.Subtract(game.Timestamp).Seconds}s",
+                        user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
             }
         }
 
-        private async void TimerCallback(object? state)
+        private async void PostQuestion(object? state)
         {
-            var (channel, timer) = (state as TriviaGame).AsTuple;
+            var game = state as TriviaGame;
 
             if (_questions.Count == 0)
             {
@@ -135,29 +144,29 @@ namespace Silicon.Services
             }
             var q = _questions.Pop();
             var builder = new EmbedBuilder()
-                .WithTitle(title = $"{q.Category.ToUpper()}, difficulty: {q.Difficulty.ToUpper()}")
+                .WithTitle(game.Title = $"{q.Category.ToUpper()}, difficulty: {q.Difficulty.ToUpper()}")
                 .WithDescription(q.Question.DecodeHtml());
             var choices = new List<string>(q.FalseAnswers);
             if (q.Type == "multiple")
             {
                 var index = (byte)_rand.Next(0, choices.Count);
                 choices.Insert(index, q.Answer);
-                correct = index;
+                game.Correct = index;
             }
             else
             {
                 if (q.FalseAnswers[0] == "True")
                 {
-                    correct = 1;
+                    game.Correct = 1;
                     choices.Add("False");
                 }
                 else
                 {
-                    correct = 0;
-                    choices.Insert(correct, "True");
+                    game.Correct = 0;
+                    choices.Insert(game.Correct, "True");
                 }
             }
-            this.choices = choices.ToArray();
+
             for (byte i = 0; i < choices.Count; i++)
             {
                 string choice = choices[i];
@@ -167,21 +176,13 @@ namespace Silicon.Services
             }
             builder.WithFooter("Made with `opentdb.com`");
 
-            await (channel as ISocketMessageChannel).SendMessageAsync(embed: builder.Build());
-            timeOfQuestion = DateTimeOffset.Now;
-            await channel.AddPermissionOverwriteAsync(channel.Guild.EveryoneRole,
+            game.Choices = choices.ToArray();
+            game.Timer.Change(-1, -1);
+
+            await game.Channel.SendMessageAsync(embed: builder.Build());
+            game.Timestamp = DateTimeOffset.Now;
+            await game.Channel.AddPermissionOverwriteAsync(game.Channel.Guild.EveryoneRole,
                 OverwritePermissions.InheritAll.Modify(sendMessages: PermValue.Allow));
-
-            timer.Change(-1, -1);
-        }
-
-        private EmbedBuilder GetEmbed(IUser user)
-        {
-            return new EmbedBuilder()
-                .WithTitle(title)
-                .WithDescription("Correct!")
-                .WithFooter($"Answered by {user.FullName()} in {DateTimeOffset.Now.Subtract(timeOfQuestion)}",
-                    user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
         }
     }
 }

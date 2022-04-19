@@ -29,7 +29,7 @@ namespace Silicon.Services
         public void RemoveReactionCallback(ulong msg)
             => reactions.Remove(msg);
 
-        public async Task<SocketMessage> GetResponseAsync(SocketCommandContext context,
+        public async Task<SocketMessage> GetResponseAsync(DiscordSocketClient client,
             TimeSpan timeout,
             Func<SocketMessage, bool> judge)
         {
@@ -42,12 +42,12 @@ namespace Silicon.Services
                 return Task.CompletedTask;
             }
 
-            context.Client.MessageReceived += Handler;
+            client.MessageReceived += Handler;
 
             var trigger = eventTrigger.Task;
             var task = await Task.WhenAny(trigger, Task.Delay(timeout));
 
-            context.Client.MessageReceived -= Handler;
+            client.MessageReceived -= Handler;
 
             return task == trigger ? await trigger : null;
         }

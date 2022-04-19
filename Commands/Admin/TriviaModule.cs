@@ -11,7 +11,7 @@ namespace Silicon.Commands.Admin
         public TriviaService Trivia { get; set; }
 
         [Command("launchtrivia")]
-        public Task LaunchTrivia(SocketGuildChannel channel)
+        public Task LaunchTrivia(SocketTextChannel channel)
         {
             Trivia.SetChannel(Context.Guild.Id, channel);
             return ReplyAsync($"Set the current server's trivia channel to <#{channel.Id}>");
